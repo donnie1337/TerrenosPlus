@@ -1,0 +1,39 @@
+claims:
+  # Apenas nestes mundos jogadores podem criar terrenos.
+  enabled-worlds:
+    - world
+
+  minimum-width: 5
+  minimum-area: 25
+  maximum-area-per-claim: 10000
+  maximum-claims-per-player: 5
+
+tool:
+  material: GOLDEN_SHOVEL
+
+protection:
+  block-break: true
+  block-place: true
+  interactions: true
+  buckets: true
+  explosions: true
+  pistons: true
+  fluids: true
+
+messages:
+  prefix: "&6&lTerrenos &8» &r"
+  disabled-world: "&cNão é possível criar terrenos neste mundo."
+  first-corner: "&aPrimeiro canto selecionado em &f{x}, {z}&a. Clique no canto oposto."
+  different-world: "&cOs dois cantos precisam estar no mesmo mundo."
+  too-small: "&cO terreno precisa ter pelo menos &f{min}x{min}&c blocos."
+  too-large: "&cEsse terreno é grande demais. Limite: &f{max}&c blocos."
+  overlap: "&cEsse terreno se sobrepõe ao terreno de &f{owner}&c."
+  claim-limit: "&cVocê já atingiu o limite de &f{max}&c terrenos."
+  created: "&aTerreno criado com &f{area}&a blocos."
+  protected: "&cEste terreno pertence a &f{owner}&c."
+  no-claim: "&7Este local não possui dono."
+  info-owner: "&7Dono: &f{owner} &8| &7Área: &f{area} &8| &7ID: &f{id}"
+  removed: "&aTerreno removido."
+  not-owner: "&cVocê não é o dono deste terreno."
+  list-header: "&6Seus terrenos (&f{count}&6):"
+  list-item: "&7- &f{id} &8| &7{world} &8| &f{area} blocos"

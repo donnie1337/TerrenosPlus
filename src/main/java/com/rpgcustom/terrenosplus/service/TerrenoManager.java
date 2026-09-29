@@ -1,0 +1,263 @@
+package com.rpgcustom.terrenosplus.service;
+
+import com.rpgcustom.terrenosplus.TerrenosPlus;
+import com.rpgcustom.terrenosplus.api.TerrenosApi;
+import com.rpgcustom.terrenosplus.model.Terreno;
+import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.logging.Level;
+
+public final class TerrenoManager implements TerrenosApi {
+
+    private final TerrenosPlus plugin;
+    private final File dataFile;
+    private final Map<UUID, Terreno> terrenos = new HashMap<>();
+    private final Map<String, Map<Long, Set<UUID>>> chunkIndex = new HashMap<>();
+
+    public TerrenoManager(TerrenosPlus plugin) {
+        this.plugin = plugin;
+        this.dataFile = new File(plugin.getDataFolder(), "terrenos.yml");
+    }
+
+    public void load() {
+        terrenos.clear();
+        chunkIndex.clear();
+        if (!dataFile.exists()) return;
+
+        YamlConfiguration data = YamlConfiguration.loadConfiguration(dataFile);
+        ConfigurationSection section = data.getConfigurationSection("terrenos");
+        if (section == null) return;
+
+        for (String key : section.getKeys(false)) {
+            try {
+                UUID id = UUID.fromString(key);
+                String base = "terrenos." + key + ".";
+                UUID owner = UUID.fromString(data.getString(base + "owner"));
+                String ownerName = data.getString(base + "owner-name", "Desconhecido");
+                String world = data.getString(base + "world");
+                int minX = data.getInt(base + "min-x");
+                int minZ = data.getInt(base + "min-z");
+                int maxX = data.getInt(base + "max-x");
+                int maxZ = data.getInt(base + "max-z");
+                if (world == null) continue;
+
+                Terreno terreno = new Terreno(id, owner, ownerName, world, minX, minZ, maxX, maxZ);
+                terrenos.put(id, terreno);
+                index(terreno);
+            } catch (RuntimeException exception) {
+                plugin.getLogger().log(Level.WARNING, "Terreno inválido ignorado: " + key, exception);
+            }
+        }
+    }
+
+    public void save() {
+        YamlConfiguration data = new YamlConfiguration();
+        for (Terreno terreno : terrenos.values()) {
+            String base = "terrenos." + terreno.id() + ".";
+            data.set(base + "owner", terreno.ownerId().toString());
+            data.set(base + "owner-name", terreno.ownerName());
+            data.set(base + "world", terreno.world());
+            data.set(base + "min-x", terreno.minX());
+            data.set(base + "min-z", terreno.minZ());
+            data.set(base + "max-x", terreno.maxX());
+            data.set(base + "max-z", terreno.maxZ());
+        }
+
+        try {
+            dataFile.getParentFile().mkdirs();
+            data.save(dataFile);
+        } catch (IOException exception) {
+            plugin.getLogger().log(Level.SEVERE, "Não foi possível salvar terrenos.yml", exception);
+        }
+    }
+
+    public CreateResult create(Player player, Location first, Location second) {
+        if (first.getWorld() == null || second.getWorld() == null
+                || !first.getWorld().equals(second.getWorld())) {
+            return CreateResult.differentWorld();
+        }
+
+        int maxClaims = Math.max(1, plugin.getConfig().getInt("claims.maximum-claims-per-player", 5));
+        if (getByOwner(player.getUniqueId()).size() >= maxClaims) {
+            return CreateResult.limit(maxClaims);
+        }
+
+        Terreno candidate = new Terreno(
+                UUID.randomUUID(),
+                player.getUniqueId(),
+                player.getName(),
+                first.getWorld().getName(),
+                first.getBlockX(),
+                first.getBlockZ(),
+                second.getBlockX(),
+                second.getBlockZ()
+        );
+
+        int minWidth = Math.max(1, plugin.getConfig().getInt("claims.minimum-width", 5));
+        long minArea = Math.max(1L, plugin.getConfig().getLong("claims.minimum-area", 25L));
+        if (candidate.width() < minWidth || candidate.depth() < minWidth || candidate.area() < minArea) {
+            return CreateResult.tooSmall(minWidth);
+        }
+
+        long maxArea = Math.max(minArea,
+                plugin.getConfig().getLong("claims.maximum-area-per-claim", 10000L));
+        if (candidate.area() > maxArea) {
+            return CreateResult.tooLarge(maxArea);
+        }
+
+        Terreno overlap = findOverlap(candidate);
+        if (overlap != null) {
+            return CreateResult.overlap(overlap);
+        }
+
+        terrenos.put(candidate.id(), candidate);
+        index(candidate);
+        save();
+        return CreateResult.success(candidate);
+    }
+
+    public boolean remove(Terreno terreno) {
+        if (terreno == null || terrenos.remove(terreno.id()) == null) return false;
+        unindex(terreno);
+        save();
+        return true;
+    }
+
+    public Optional<Terreno> find(Location location) {
+        if (location == null || location.getWorld() == null) return Optional.empty();
+        Map<Long, Set<UUID>> worldIndex = chunkIndex.get(location.getWorld().getName());
+        if (worldIndex == null) return Optional.empty();
+
+        Set<UUID> ids = worldIndex.get(chunkKey(location.getBlockX() >> 4, location.getBlockZ() >> 4));
+        if (ids == null) return Optional.empty();
+
+        for (UUID id : ids) {
+            Terreno terreno = terrenos.get(id);
+            if (terreno != null && terreno.contains(location)) return Optional.of(terreno);
+        }
+        return Optional.empty();
+    }
+
+    public List<Terreno> getByOwner(UUID owner) {
+        List<Terreno> result = new ArrayList<>();
+        for (Terreno terreno : terrenos.values()) {
+            if (terreno.ownerId().equals(owner)) result.add(terreno);
+        }
+        result.sort((a, b) -> a.id().toString().compareTo(b.id().toString()));
+        return result;
+    }
+
+    public Collection<Terreno> all() {
+        return Collections.unmodifiableCollection(terrenos.values());
+    }
+
+    public boolean canBuild(Player player, Location location) {
+        if (player.hasPermission("terrenosplus.bypass")) return true;
+        Optional<Terreno> terreno = find(location);
+        return terreno.isEmpty() || terreno.get().ownerId().equals(player.getUniqueId());
+    }
+
+    @Override
+    public Optional<TerrenoInfo> getTerrenoAt(Location location) {
+        return find(location).map(Terreno::toInfo);
+    }
+
+    @Override
+    public boolean hasBuildAccess(UUID playerId, Location location) {
+        Optional<Terreno> terreno = find(location);
+        return terreno.isEmpty() || terreno.get().ownerId().equals(playerId);
+    }
+
+    private Terreno findOverlap(Terreno candidate) {
+        int minChunkX = candidate.minX() >> 4;
+        int maxChunkX = candidate.maxX() >> 4;
+        int minChunkZ = candidate.minZ() >> 4;
+        int maxChunkZ = candidate.maxZ() >> 4;
+        Map<Long, Set<UUID>> worldIndex = chunkIndex.get(candidate.world());
+        if (worldIndex == null) return null;
+
+        Set<UUID> checked = new HashSet<>();
+        for (int cx = minChunkX; cx <= maxChunkX; cx++) {
+            for (int cz = minChunkZ; cz <= maxChunkZ; cz++) {
+                Set<UUID> ids = worldIndex.get(chunkKey(cx, cz));
+                if (ids == null) continue;
+                for (UUID id : ids) {
+                    if (!checked.add(id)) continue;
+                    Terreno existing = terrenos.get(id);
+                    if (existing != null && candidate.overlaps(existing)) return existing;
+                }
+            }
+        }
+        return null;
+    }
+
+    private void index(Terreno terreno) {
+        Map<Long, Set<UUID>> world = chunkIndex.computeIfAbsent(terreno.world(), ignored -> new HashMap<>());
+        forEachChunk(terreno, (cx, cz) ->
+                world.computeIfAbsent(chunkKey(cx, cz), ignored -> new HashSet<>()).add(terreno.id()));
+    }
+
+    private void unindex(Terreno terreno) {
+        Map<Long, Set<UUID>> world = chunkIndex.get(terreno.world());
+        if (world == null) return;
+
+        forEachChunk(terreno, (cx, cz) -> {
+            long key = chunkKey(cx, cz);
+            Set<UUID> ids = world.get(key);
+            if (ids == null) return;
+            ids.remove(terreno.id());
+            if (ids.isEmpty()) world.remove(key);
+        });
+
+        if (world.isEmpty()) chunkIndex.remove(terreno.world());
+    }
+
+    private void forEachChunk(Terreno terreno, ChunkConsumer consumer) {
+        int minChunkX = terreno.minX() >> 4;
+        int maxChunkX = terreno.maxX() >> 4;
+        int minChunkZ = terreno.minZ() >> 4;
+        int maxChunkZ = terreno.maxZ() >> 4;
+
+        for (int cx = minChunkX; cx <= maxChunkX; cx++) {
+            for (int cz = minChunkZ; cz <= maxChunkZ; cz++) {
+                consumer.accept(cx, cz);
+            }
+        }
+    }
+
+    private long chunkKey(int x, int z) {
+        return ((long) x << 32) ^ (z & 0xffffffffL);
+    }
+
+    @FunctionalInterface
+    private interface ChunkConsumer {
+        void accept(int chunkX, int chunkZ);
+    }
+
+    public record CreateResult(Type type, Terreno terreno, Terreno overlap, long value) {
+        public enum Type { SUCCESS, DIFFERENT_WORLD, TOO_SMALL, TOO_LARGE, OVERLAP, LIMIT }
+
+        static CreateResult success(Terreno t) { return new CreateResult(Type.SUCCESS, t, null, 0); }
+        static CreateResult differentWorld() { return new CreateResult(Type.DIFFERENT_WORLD, null, null, 0); }
+        static CreateResult tooSmall(long min) { return new CreateResult(Type.TOO_SMALL, null, null, min); }
+        static CreateResult tooLarge(long max) { return new CreateResult(Type.TOO_LARGE, null, null, max); }
+        static CreateResult overlap(Terreno t) { return new CreateResult(Type.OVERLAP, null, t, 0); }
+        static CreateResult limit(long max) { return new CreateResult(Type.LIMIT, null, null, max); }
+    }
+}

@@ -1,0 +1,23 @@
+name: TerrenosPlus
+version: '1.0.0'
+main: com.rpgcustom.terrenosplus.TerrenosPlus
+api-version: '26.3'
+author: donnie1337
+description: Sistema próprio de terrenos com seleção por pá de ouro.
+
+commands:
+  terreno:
+    description: Gerencia seus terrenos.
+    usage: /terreno <info|remover|listar>
+    aliases: [terrenos, claim]
+
+permissions:
+  terrenosplus.use:
+    description: Permite criar e gerenciar terrenos.
+    default: true
+  terrenosplus.bypass:
+    description: Ignora proteções de terrenos.
+    default: op
+  terrenosplus.admin:
+    description: Permite ações administrativas do TerrenosPlus.
+    default: op
