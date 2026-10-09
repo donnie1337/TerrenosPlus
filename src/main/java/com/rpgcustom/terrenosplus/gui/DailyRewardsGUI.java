@@ -13,8 +13,8 @@ public final class DailyRewardsGUI {
 
     // Caminho em zigue-zague, inspirado em uma trilha de progresso.
     public static final int[] DAY_SLOTS = {10, 20, 30, 40, 32, 24, 16};
-    public static final int SLOT_BACK = 45;
-    public static final int SLOT_PROFILE = 49;
+    public static final int SLOT_BACK = 47;
+    public static final int SLOT_PROFILE = 51;
 
     private DailyRewardsGUI() {
     }
