@@ -54,7 +54,7 @@ messages:
   marcos-daily-claimed: "&aRecompensa diária coletada: &e+{amount} Marcos&a. Saldo: &e{balance}&a."
   no-claim: "&7Este local não possui dono."
   command-own-claim-only: "&cVocê precisa estar dentro de um terreno seu para usar este comando."
-  info-owner: "&7Dono: &f{owner} &8| &7Área: &f{area} &8| &7ID: &f{id}"
+  info-owner: "&7Dono: &f{owner}&7, Área: &f{area} Blocos&7, Data de criação: &f{created}&7, Tamanho: &f{width}x{depth}&7, Mundo: &f{world}&7, ID: &f{id}"
   removed: "&aTerreno removido."
   not-owner: "&cVocê não é o dono deste terreno."
   list-header: "&6Seus terrenos (&f{count}&6):"
