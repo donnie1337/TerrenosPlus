@@ -106,9 +106,11 @@ public final class TerrenosGUI {
                 List.of(
                         "",
                         "&fUse o comando:",
-                        "&e/terreno expandir <direção> <quantidade>",
+                        "&e/terreno expandir <quantidade>",
                         "",
-                        "&7Exemplo: &f/terreno expandir sul 40",
+                        "&7Usa a direção que você está olhando.",
+                        "&7Ou escolha o lado:",
+                        "&f/terreno expandir sul 40",
                         "",
                         "&7Uma faixa completa representa:",
                         "&fNorte/Sul: &e" + northSouthCost + " blocos",
