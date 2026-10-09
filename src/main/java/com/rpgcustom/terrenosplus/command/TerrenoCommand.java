@@ -11,9 +11,15 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 public final class TerrenoCommand implements CommandExecutor {
+
+    private static final DateTimeFormatter CREATION_DATE_FORMAT =
+            DateTimeFormatter.ofPattern("dd/MM/yyyy").withZone(ZoneId.systemDefault());
 
     private final TerrenosPlus plugin;
     private final TerrenoManager manager;
@@ -52,9 +58,17 @@ public final class TerrenoCommand implements CommandExecutor {
             }
 
             Terreno t = terreno.get();
+            String createdAt = t.createdAt() > 0L
+                    ? CREATION_DATE_FORMAT.format(Instant.ofEpochMilli(t.createdAt()))
+                    : "Desconhecida";
+
             plugin.send(player, "messages.info-owner",
                     "{owner}", t.ownerName(),
                     "{area}", String.valueOf(t.area()),
+                    "{created}", createdAt,
+                    "{width}", String.valueOf(t.width()),
+                    "{depth}", String.valueOf(t.depth()),
+                    "{world}", t.world(),
                     "{id}", t.id().toString().substring(0, 8));
             return true;
         }
