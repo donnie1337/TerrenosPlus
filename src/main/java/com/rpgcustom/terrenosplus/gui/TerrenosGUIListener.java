@@ -61,12 +61,8 @@ public final class TerrenosGUIListener implements Listener {
         }
 
         if (holder.view() == TerrenosGUIHolder.View.LIST) {
-            if (slot == TerrenosListGUI.SLOT_BACK) {
+            if (slot == TerrenosListGUI.backSlot(event.getInventory().getSize())) {
                 player.openInventory(TerrenosGUI.main(player, manager));
-            } else if (slot == TerrenosListGUI.SLOT_PREVIOUS && holder.page() > 0) {
-                player.openInventory(TerrenosListGUI.build(player, manager, holder.page() - 1));
-            } else if (slot == TerrenosListGUI.SLOT_NEXT) {
-                player.openInventory(TerrenosListGUI.build(player, manager, holder.page() + 1));
             }
         }
     }
