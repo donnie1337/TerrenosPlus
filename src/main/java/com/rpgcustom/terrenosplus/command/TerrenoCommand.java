@@ -128,8 +128,19 @@ public final class TerrenoCommand implements CommandExecutor {
                 return true;
             }
 
+            TerrenoManager.Direction direction = facingDirection(player.getFacing());
+
+            // Cada unidade de expansão avança a borda inteira em 1 bloco.
+            // O custo é calculado pela quantidade real de novos blocos de área:
+            // Leste/Oeste usa a profundidade atual; Norte/Sul usa a largura atual.
+            long borderLength = switch (direction) {
+                case EAST, WEST -> current.depth();
+                case NORTH, SOUTH -> current.width();
+            };
+            long addedBlocks = (long) amount * borderLength;
+
             int costPerBlock = Math.max(1, plugin.getConfig().getInt("claims.expansion.marcos-per-block", 1));
-            long rawCost = (long) amount * costPerBlock;
+            long rawCost = addedBlocks * costPerBlock;
             if (rawCost > Integer.MAX_VALUE) {
                 plugin.send(player, "messages.expand-invalid");
                 return true;
@@ -143,7 +154,6 @@ public final class TerrenoCommand implements CommandExecutor {
                 return true;
             }
 
-            TerrenoManager.Direction direction = facingDirection(player.getFacing());
             TerrenoManager.ExpandResult result = manager.expand(current, player, direction, amount);
 
             switch (result.type()) {
