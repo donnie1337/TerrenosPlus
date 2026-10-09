@@ -69,6 +69,7 @@ public final class TerrenosPlus extends JavaPlugin {
             message = switch (path) {
                 case "messages.tracker-unprotected" -> "&7Este bloco não está protegido por nenhum terreno.";
                 case "messages.tracker-info" -> "&7Dono: &f{owner} &8| &7Área: &f{area} blocos &8| &7Tamanho: &f{width}x{depth}";
+                case "messages.command-own-claim-only" -> "&cEste comando só pode ser usado dentro do seu próprio terreno.";
                 default -> path;
             };
         }
