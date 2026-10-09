@@ -33,7 +33,7 @@ public final class TerrenosListGUI {
                     "&aTerreno #" + (i + 1),
                     List.of(
                             "",
-                            "&fMundo: &e" + terrain.world(),
+                            "&fMundo: &a" + displayWorldName(terrain.world()),
                             "&fÁrea: &e" + terrain.area() + " blocos",
                             "&fTamanho: &e" + terrain.width() + "x" + terrain.depth(),
                             "",
@@ -66,6 +66,16 @@ public final class TerrenosListGUI {
         }
 
         return inventory;
+    }
+
+    private static String displayWorldName(String worldName) {
+        if (worldName == null || worldName.isBlank()) return "Desconhecido";
+        if ("world".equalsIgnoreCase(worldName)
+                || "minecraft:overworld".equalsIgnoreCase(worldName)
+                || "overworld".equalsIgnoreCase(worldName)) {
+            return "Overworld";
+        }
+        return worldName;
     }
 
     public static int backSlot(int inventorySize) {
