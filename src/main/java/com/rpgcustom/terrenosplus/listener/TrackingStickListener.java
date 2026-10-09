@@ -200,13 +200,16 @@ public final class TrackingStickListener implements Listener {
     }
 
     private void flashRemovedBoundary(Player player, Terreno terrain) {
-        for (int pulse = 0; pulse < 3; pulse++) {
+        // Mantém o contorno vermelho visível por mais tempo após a remoção.
+        // O mesmo cálculo de altura do tracker é usado, então o efeito acompanha
+        // o relevo em diagonal e permanece um bloco acima dos blocos da borda.
+        for (int pulse = 0; pulse < 8; pulse++) {
             plugin.getServer().getScheduler().runTaskLater(
                     plugin,
                     () -> {
                         if (player.isOnline()) showBoundary(player, terrain, Color.RED);
                     },
-                    pulse * 8L
+                    pulse * 10L
             );
         }
     }
