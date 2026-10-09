@@ -116,22 +116,47 @@ public final class TerrenosGUIListener implements Listener {
             if (slot == TerrenosGUI.SLOT_EXPAND) {
                 player.closeInventory();
 
-                Component suggestion = Component.text("/terreno expandir ")
-                        .color(NamedTextColor.YELLOW)
+                Component command = Component.text("/terreno expandir ")
+                        .color(NamedTextColor.GREEN)
                         .clickEvent(ClickEvent.suggestCommand("/terreno expandir "))
                         .hoverEvent(HoverEvent.showText(
-                                Component.text("Clique para preencher o comando no chat")
+                                Component.text("Clique para preencher o comando")
                                         .color(NamedTextColor.GREEN)));
 
+                Component back = Component.text("AQUI")
+                        .color(NamedTextColor.RED)
+                        .decorate(net.kyori.adventure.text.format.TextDecoration.BOLD)
+                        .clickEvent(ClickEvent.runCommand("/terreno"))
+                        .hoverEvent(HoverEvent.showText(
+                                Component.text("Clique para voltar ao menu de terrenos")
+                                        .color(NamedTextColor.YELLOW)));
+
+                player.sendMessage(Component.empty());
                 player.sendMessage(
-                        Component.text("[Terrenos] ").color(NamedTextColor.GREEN)
-                                .append(Component.text("Clique aqui para preencher: ")
+                        Component.text("TERRENO").color(NamedTextColor.AQUA)
+                                .decorate(net.kyori.adventure.text.format.TextDecoration.BOLD)
+                                .append(Component.text(" • ").color(NamedTextColor.DARK_GRAY))
+                                .append(Component.text("Expansão").color(NamedTextColor.WHITE))
+                );
+                player.sendMessage(Component.empty());
+                player.sendMessage(
+                        Component.text("Digite no chat o comando ").color(NamedTextColor.WHITE)
+                                .append(command)
+                                .append(Component.text("com a quantidade desejada.")
                                         .color(NamedTextColor.WHITE))
-                                .append(suggestion)
                 );
                 player.sendMessage(
-                        Component.text("Use só a quantidade para expandir para onde olha, ou informe a direção. Ex.: /terreno expandir 40")
-                                .color(NamedTextColor.GRAY)
+                        Component.text("Exemplos: ").color(NamedTextColor.GRAY)
+                                .append(Component.text("/terreno expandir 5").color(NamedTextColor.WHITE))
+                                .append(Component.text(" ou ").color(NamedTextColor.GRAY))
+                                .append(Component.text("/terreno expandir norte 5").color(NamedTextColor.WHITE))
+                );
+                player.sendMessage(Component.empty());
+                player.sendMessage(
+                        Component.text("Clique ").color(NamedTextColor.GRAY)
+                                .append(back)
+                                .append(Component.text(" para voltar ao menu.")
+                                        .color(NamedTextColor.GRAY))
                 );
                 return;
             }
