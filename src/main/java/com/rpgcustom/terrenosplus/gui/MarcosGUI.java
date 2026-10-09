@@ -32,14 +32,11 @@ public final class MarcosGUI {
 
         inventory.setItem(SLOT_PLAYTIME, TerrenosGUI.item(
                 Material.CLOCK,
-                "&b&lᴛᴇᴍᴘᴏ ᴊᴏɢᴀᴅᴏ",
+                "&bTEMPO JOGADO",
                 List.of(
                         "",
                         "&fFique online no servidor para",
                         "&freceber Marcos automaticamente.",
-                        "",
-                        "&7A cada 1 hora online:",
-                        "&e25, 50 ou 75 Marcos",
                         "",
                         "&fPróxima recompensa: &e~" + minutes + " min"
                 )
@@ -47,7 +44,7 @@ public final class MarcosGUI {
 
         inventory.setItem(SLOT_DAILY, TerrenosGUI.item(
                 Material.SUNFLOWER,
-                "&b&lʀᴇᴄᴏᴍᴘᴇɴsᴀs ᴅɪáʀɪᴀs",
+                "&bRECOMPENSAS DIÁRIAS",
                 List.of(
                         "",
                         "&fEntre todos os dias e avance",
@@ -63,7 +60,7 @@ public final class MarcosGUI {
 
         inventory.setItem(SLOT_MISSIONS, TerrenosGUI.item(
                 Material.WRITABLE_BOOK,
-                "&b&lᴍɪssõᴇs",
+                "&bMISSÕES",
                 List.of(
                         "",
                         "&fComplete objetivos de mineração,",
