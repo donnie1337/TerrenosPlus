@@ -9,6 +9,7 @@ import com.rpgcustom.terrenosplus.listener.TrackingStickListener;
 import com.rpgcustom.terrenosplus.listener.TerrainEnterListener;
 import com.rpgcustom.terrenosplus.gui.MarcosGUIListener;
 import com.rpgcustom.terrenosplus.gui.TerrenosGUIListener;
+import com.rpgcustom.terrenosplus.service.ClaimExpirationService;
 import com.rpgcustom.terrenosplus.service.MarcoManager;
 import com.rpgcustom.terrenosplus.service.TerrenoManager;
 import org.bukkit.ChatColor;
@@ -22,6 +23,7 @@ public final class TerrenosPlus extends JavaPlugin {
     private TerrenoManager terrenoManager;
     private MarcoManager marcoManager;
     private TrackingStickListener trackingStickListener;
+    private ClaimExpirationService claimExpirationService;
 
     @Override
     public void onEnable() {
@@ -35,6 +37,10 @@ public final class TerrenosPlus extends JavaPlugin {
         marcoManager = new MarcoManager(this);
         marcoManager.load();
         marcoManager.start();
+
+        claimExpirationService = new ClaimExpirationService(this, terrenoManager);
+        getServer().getPluginManager().registerEvents(claimExpirationService, this);
+        claimExpirationService.start();
 
         getServer().getServicesManager().register(
                 TerrenosApi.class,
@@ -72,6 +78,10 @@ public final class TerrenosPlus extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (claimExpirationService != null) {
+            claimExpirationService.markOnlinePlayersSeen();
+            claimExpirationService.stop();
+        }
         if (marcoManager != null) {
             marcoManager.stop();
             marcoManager.save();
