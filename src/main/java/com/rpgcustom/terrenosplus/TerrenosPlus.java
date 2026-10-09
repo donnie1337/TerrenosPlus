@@ -7,6 +7,7 @@ import com.rpgcustom.terrenosplus.listener.ClaimToolListener;
 import com.rpgcustom.terrenosplus.listener.ProtectionListener;
 import com.rpgcustom.terrenosplus.listener.TrackingStickListener;
 import com.rpgcustom.terrenosplus.listener.TerrainEnterListener;
+import com.rpgcustom.terrenosplus.listener.VisitorFlyListener;
 import com.rpgcustom.terrenosplus.gui.MarcosGUIListener;
 import com.rpgcustom.terrenosplus.gui.TerrenosGUIListener;
 import com.rpgcustom.terrenosplus.service.ClaimExpirationService;
@@ -23,6 +24,7 @@ public final class TerrenosPlus extends JavaPlugin {
     private TerrenoManager terrenoManager;
     private MarcoManager marcoManager;
     private TrackingStickListener trackingStickListener;
+    private VisitorFlyListener visitorFlyListener;
     private ClaimExpirationService claimExpirationService;
 
     @Override
@@ -58,8 +60,12 @@ public final class TerrenosPlus extends JavaPlugin {
                 trackingStickListener, this);
         getServer().getPluginManager().registerEvents(
                 new TerrainEnterListener(terrenoManager), this);
+
+        visitorFlyListener = new VisitorFlyListener(terrenoManager);
+        getServer().getPluginManager().registerEvents(visitorFlyListener, this);
+
         getServer().getPluginManager().registerEvents(
-                new TerrenosGUIListener(this, terrenoManager, marcoManager), this);
+                new TerrenosGUIListener(this, terrenoManager, marcoManager, visitorFlyListener), this);
         getServer().getPluginManager().registerEvents(
                 new MarcosGUIListener(marcoManager, terrenoManager), this);
 
@@ -105,6 +111,10 @@ public final class TerrenosPlus extends JavaPlugin {
 
     public TrackingStickListener getTrackingStickListener() {
         return trackingStickListener;
+    }
+
+    public VisitorFlyListener getVisitorFlyListener() {
+        return visitorFlyListener;
     }
 
     public void sendMarcos(Player player, String path, String... replacements) {
