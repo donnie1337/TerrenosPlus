@@ -97,6 +97,30 @@ public final class TerrenoCommand implements CommandExecutor {
             return true;
         }
 
+        if (args[0].equalsIgnoreCase("explosao")) {
+            Optional<Terreno> terreno = manager.find(player.getLocation());
+            if (terreno.isEmpty()) {
+                plugin.send(player, "messages.no-claim");
+                return true;
+            }
+
+            Terreno t = terreno.get();
+            if (!t.ownerId().equals(player.getUniqueId()) && !player.hasPermission("terrenosplus.admin")) {
+                plugin.send(player, "messages.not-owner");
+                return true;
+            }
+
+            boolean enabled = !t.explosionsEnabled();
+            if (!manager.setExplosionsEnabled(t, enabled)) {
+                plugin.send(player, "messages.explosion-toggle-failed");
+                return true;
+            }
+
+            plugin.send(player,
+                    enabled ? "messages.explosions-enabled" : "messages.explosions-disabled");
+            return true;
+        }
+
         if (args[0].equalsIgnoreCase("expandir")) {
             Optional<Terreno> terreno = manager.find(player.getLocation());
             if (terreno.isEmpty()) {
@@ -201,6 +225,7 @@ public final class TerrenoCommand implements CommandExecutor {
 
         player.sendMessage("§e/terreno info §7- mostra o dono do local");
         player.sendMessage("§e/terreno remover §7- remove seu terreno atual");
+        player.sendMessage("§e/terreno explosao §7- ativa ou desativa explosões no terreno");
         player.sendMessage("§e/terreno listar §7- lista seus terrenos");
         player.sendMessage("§e/terreno expandir <quantidade> §7- expande na direção que você está olhando");
         return true;
