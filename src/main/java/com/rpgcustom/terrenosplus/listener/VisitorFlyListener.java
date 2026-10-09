@@ -84,6 +84,7 @@ public final class VisitorFlyListener implements Listener {
             return;
         }
 
+        boolean firstSuppression = !suppressed.containsKey(player.getUniqueId());
         suppressed.computeIfAbsent(
                 player.getUniqueId(),
                 ignored -> new FlyState(player.getAllowFlight(), player.isFlying())
@@ -93,6 +94,13 @@ public final class VisitorFlyListener implements Listener {
             player.setFlying(false);
         }
         player.setAllowFlight(false);
+
+        if (firstSuppression) {
+            player.sendMessage(org.bukkit.ChatColor.translateAlternateColorCodes(
+                    '&',
+                    "&c[Voo] Modo de voo desativado nesse terreno."
+            ));
+        }
     }
 
     private void restore(Player player) {
