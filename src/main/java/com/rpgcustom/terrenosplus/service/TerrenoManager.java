@@ -154,6 +154,11 @@ public final class TerrenoManager implements TerrenosApi {
         return Optional.empty();
     }
 
+    public Optional<Terreno> getById(UUID id) {
+        if (id == null) return Optional.empty();
+        return Optional.ofNullable(terrenos.get(id));
+    }
+
     public List<Terreno> getByOwner(UUID owner) {
         List<Terreno> result = new ArrayList<>();
         for (Terreno terreno : terrenos.values()) {
