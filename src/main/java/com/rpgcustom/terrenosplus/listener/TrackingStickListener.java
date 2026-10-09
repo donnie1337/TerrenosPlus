@@ -3,6 +3,7 @@ package com.rpgcustom.terrenosplus.listener;
 import com.rpgcustom.terrenosplus.TerrenosPlus;
 import com.rpgcustom.terrenosplus.model.Terreno;
 import com.rpgcustom.terrenosplus.service.TerrenoManager;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -237,7 +238,14 @@ public final class TrackingStickListener implements Listener {
     }
 
     private void particle(Player player, Location location) {
-        player.spawnParticle(Particle.WAX_ON, location, 2, 0.05, 0.05, 0.05, 0.0);
+        player.spawnParticle(
+                Particle.DUST,
+                location,
+                2,
+                0.05, 0.05, 0.05,
+                0.0,
+                new Particle.DustOptions(Color.YELLOW, 1.15f)
+        );
     }
 
     private record MarkerState(UUID terrainId, List<Location> locations) {
