@@ -236,16 +236,33 @@ public final class TrackingStickListener implements Listener {
         var world = plugin.getServer().getWorld(terrain.world());
         if (world == null) return;
 
-        int y = player.getLocation().getBlockY() + 1;
+        Location minMin = groundCorner(world, terrain.minX(), terrain.minZ());
+        Location minMax = groundCorner(world, terrain.minX(), terrain.maxZ());
+        Location maxMin = groundCorner(world, terrain.maxX(), terrain.minZ());
+        Location maxMax = groundCorner(world, terrain.maxX(), terrain.maxZ());
+
         int step = Math.max(1, Math.min(4, Math.max(terrain.width(), terrain.depth()) / 20));
 
-        for (int x = terrain.minX(); x <= terrain.maxX(); x += step) {
-            particle(player, new Location(world, x + 0.5, y, terrain.minZ() + 0.5));
-            particle(player, new Location(world, x + 0.5, y, terrain.maxZ() + 0.5));
-        }
-        for (int z = terrain.minZ(); z <= terrain.maxZ(); z += step) {
-            particle(player, new Location(world, terrain.minX() + 0.5, y, z + 0.5));
-            particle(player, new Location(world, terrain.maxX() + 0.5, y, z + 0.5));
+        // Cada lado liga diretamente um bloco de ouro ao outro. Se um canto estiver
+        // mais alto ou mais baixo, o Y é interpolado e a linha acompanha a diagonal.
+        showEdge(player, minMin, maxMin, step);
+        showEdge(player, minMax, maxMax, step);
+        showEdge(player, minMin, minMax, step);
+        showEdge(player, maxMin, maxMax, step);
+    }
+
+    private void showEdge(Player player, Location from, Location to, int step) {
+        double dx = to.getX() - from.getX();
+        double dz = to.getZ() - from.getZ();
+        double horizontalDistance = Math.max(Math.abs(dx), Math.abs(dz));
+        int segments = Math.max(1, (int) Math.ceil(horizontalDistance / Math.max(1, step)));
+
+        for (int i = 0; i <= segments; i++) {
+            double progress = i / (double) segments;
+            double x = from.getX() + (dx * progress) + 0.5;
+            double y = from.getY() + ((to.getY() - from.getY()) * progress) + 1.10;
+            double z = from.getZ() + (dz * progress) + 0.5;
+            particle(player, new Location(from.getWorld(), x, y, z));
         }
     }
 
