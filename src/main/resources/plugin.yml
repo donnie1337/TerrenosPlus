@@ -4,6 +4,7 @@ main: com.rpgcustom.terrenosplus.TerrenosPlus
 api-version: '26.3'
 author: donnie1337
 description: Sistema próprio de terrenos com seleção por pá de ouro.
+softdepend: [CargoPlus]
 
 commands:
   terreno:
