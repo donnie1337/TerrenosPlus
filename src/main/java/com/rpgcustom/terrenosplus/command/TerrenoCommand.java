@@ -115,33 +115,46 @@ public final class TerrenoCommand implements CommandExecutor {
                 return true;
             }
 
-            int amount;
+            int requestedMarcos;
             try {
-                amount = Integer.parseInt(args[1]);
+                requestedMarcos = Integer.parseInt(args[1]);
             } catch (NumberFormatException exception) {
                 plugin.send(player, "messages.expand-invalid");
                 return true;
             }
 
-            if (amount <= 0) {
+            if (requestedMarcos <= 0) {
                 plugin.send(player, "messages.expand-invalid");
                 return true;
             }
 
             TerrenoManager.Direction direction = facingDirection(player.getFacing());
 
-            // Cada unidade de expansão avança a borda inteira em 1 bloco.
-            // O custo é calculado pela quantidade real de novos blocos de área:
-            // Leste/Oeste usa a profundidade atual; Norte/Sul usa a largura atual.
+            // O valor informado é a quantidade de Marcos que o jogador quer usar.
+            // Para avançar a borda em 1 bloco, é necessário pagar toda a extensão
+            // daquela borda: Leste/Oeste usa a profundidade; Norte/Sul usa a largura.
             long borderLength = switch (direction) {
                 case EAST, WEST -> current.depth();
                 case NORTH, SOUTH -> current.width();
             };
-            long addedBlocks = (long) amount * borderLength;
 
             int costPerBlock = Math.max(1, plugin.getConfig().getInt("claims.expansion.marcos-per-block", 1));
-            long rawCost = addedBlocks * costPerBlock;
-            if (rawCost > Integer.MAX_VALUE) {
+            long costPerLayer = borderLength * costPerBlock;
+            if (costPerLayer <= 0L || costPerLayer > Integer.MAX_VALUE) {
+                plugin.send(player, "messages.expand-invalid");
+                return true;
+            }
+
+            if (requestedMarcos < costPerLayer) {
+                plugin.send(player, "messages.expand-no-marcos",
+                        "{cost}", String.valueOf(costPerLayer),
+                        "{balance}", String.valueOf(marcoManager.getBalance(player.getUniqueId())));
+                return true;
+            }
+
+            int expansionAmount = (int) Math.min(Integer.MAX_VALUE, requestedMarcos / costPerLayer);
+            long rawCost = (long) expansionAmount * costPerLayer;
+            if (expansionAmount <= 0 || rawCost > Integer.MAX_VALUE) {
                 plugin.send(player, "messages.expand-invalid");
                 return true;
             }
@@ -154,7 +167,7 @@ public final class TerrenoCommand implements CommandExecutor {
                 return true;
             }
 
-            TerrenoManager.ExpandResult result = manager.expand(current, player, direction, amount);
+            TerrenoManager.ExpandResult result = manager.expand(current, player, direction, expansionAmount);
 
             switch (result.type()) {
                 case SUCCESS -> {
@@ -164,7 +177,7 @@ public final class TerrenoCommand implements CommandExecutor {
                     Terreno expanded = result.terreno();
                     trackingStickListener.showExpandedTerrain(player, expanded);
                     plugin.send(player, "messages.expanded",
-                            "{amount}", String.valueOf(amount),
+                            "{amount}", String.valueOf(expansionAmount),
                             "{direction}", directionName(direction),
                             "{cost}", String.valueOf(cost),
                             "{width}", String.valueOf(expanded.width()),
