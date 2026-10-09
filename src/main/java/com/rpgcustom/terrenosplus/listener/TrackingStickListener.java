@@ -28,6 +28,7 @@ public final class TrackingStickListener implements Listener {
     private final TerrenosPlus plugin;
     private final TerrenoManager manager;
     private final Map<UUID, MarkerState> activeMarkers = new ConcurrentHashMap<>();
+    private final Map<UUID, UUID> trackedTerrains = new ConcurrentHashMap<>();
 
     public TrackingStickListener(TerrenosPlus plugin, TerrenoManager manager) {
         this.plugin = plugin;
@@ -46,14 +47,30 @@ public final class TrackingStickListener implements Listener {
     private void showHeldTrackerBoundaries() {
         for (Player player : plugin.getServer().getOnlinePlayers()) {
             if (!isHoldingTrackingStick(player)) {
+                trackedTerrains.remove(player.getUniqueId());
                 restoreCornerMarkers(player);
                 continue;
             }
 
-            var terrain = manager.find(player.getLocation());
-            if (terrain.isEmpty()
-                    || (!terrain.get().ownerId().equals(player.getUniqueId())
-                    && !player.hasPermission("terrenosplus.admin"))) {
+            UUID trackedId = trackedTerrains.get(player.getUniqueId());
+            if (trackedId == null) {
+                manager.find(player.getLocation()).ifPresent(terrain -> {
+                    if (terrain.ownerId().equals(player.getUniqueId())
+                            || player.hasPermission("terrenosplus.admin")) {
+                        trackedTerrains.put(player.getUniqueId(), terrain.id());
+                    }
+                });
+                trackedId = trackedTerrains.get(player.getUniqueId());
+            }
+
+            if (trackedId == null) {
+                restoreCornerMarkers(player);
+                continue;
+            }
+
+            var terrain = manager.getById(trackedId);
+            if (terrain.isEmpty()) {
+                trackedTerrains.remove(player.getUniqueId());
                 restoreCornerMarkers(player);
                 continue;
             }
@@ -71,7 +88,9 @@ public final class TrackingStickListener implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        activeMarkers.remove(event.getPlayer().getUniqueId());
+        UUID uuid = event.getPlayer().getUniqueId();
+        trackedTerrains.remove(uuid);
+        activeMarkers.remove(uuid);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -85,11 +104,14 @@ public final class TrackingStickListener implements Listener {
         var terrain = manager.find(event.getClickedBlock().getLocation());
 
         if (terrain.isEmpty()) {
+            trackedTerrains.remove(player.getUniqueId());
+            restoreCornerMarkers(player);
             plugin.send(player, "messages.tracker-unprotected");
             return;
         }
 
         Terreno t = terrain.get();
+        trackedTerrains.put(player.getUniqueId(), t.id());
         plugin.send(player, "messages.tracker-info",
                 "{owner}", t.ownerName(),
                 "{area}", String.valueOf(t.area()),
