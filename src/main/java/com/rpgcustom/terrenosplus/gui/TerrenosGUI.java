@@ -16,7 +16,7 @@ public final class TerrenosGUI {
 
     public static final int SLOT_LIST = 11;
     public static final int SLOT_MANAGE = 13;
-    public static final int SLOT_BLOCKS = 15;
+    public static final int SLOT_MARCOS = 15;
 
     private TerrenosGUI() {
     }
@@ -27,8 +27,6 @@ public final class TerrenosGUI {
         holder.setInventory(inventory);
 
         List<Terreno> own = manager.getByOwner(player.getUniqueId());
-        long protectedBlocks = own.stream().mapToLong(Terreno::area).sum();
-
         inventory.setItem(SLOT_LIST, item(
                 Material.COMPASS,
                 "&b&lʟɪsᴛᴀ ᴅᴇ ᴛᴇʀʀᴇɴᴏs",
@@ -55,22 +53,23 @@ public final class TerrenosGUI {
                 )
         ));
 
-        inventory.setItem(SLOT_BLOCKS, item(
-                Material.GRASS_BLOCK,
-                "&b&lʙʟᴏᴄᴏs ᴅᴇ ᴛᴇʀʀᴇɴᴏ",
+        inventory.setItem(SLOT_MARCOS, item(
+                Material.SUNFLOWER,
+                "&b&lᴍᴀʀᴄᴏs",
                 List.of(
                         "",
-                        "&fBlocos de terreno permitem",
-                        "&fexpandir suas áreas seguras",
+                        "&fMarcos permitem expandir",
+                        "&fseus terrenos protegidos.",
                         "",
                         "&7Como conseguir:",
-                        "&e▪ &fComprando no &e/shop",
-                        "&e▪ &fFicando online no servidor",
-                        "&e▪ &fAbrindo caixas em &e/caixas",
+                        "&e▪ &fTempo jogado",
+                        "&e▪ &fMissões e objetivos",
+                        "&e▪ &fRecompensas diárias",
                         "",
-                        "&fSeus blocos protegidos: &e" + protectedBlocks,
+                        "&7A cada 1 hora online:",
+                        "&e25, 50 ou 75 Marcos",
                         "",
-                        "&aClique para abrir a loja"
+                        "&8Marcos não são comprados com Coins."
                 )
         ));
 
