@@ -22,7 +22,7 @@ permissions:
     default: true
   terrenosplus.bypass:
     description: Ignora proteções de terrenos.
-    default: op
+    default: false
   terrenosplus.admin:
     description: Permite ações administrativas do TerrenosPlus.
-    default: op
+    default: false
