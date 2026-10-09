@@ -88,6 +88,18 @@ public final class TerrenosPlus extends JavaPlugin {
         return marcoManager;
     }
 
+    public void sendMarcos(Player player, String path, String... replacements) {
+        String prefix = "&6[Marcos] &r";
+        String message = getConfig().getString(path);
+        if (message == null || message.equals(path)) {
+            message = path;
+        }
+        for (int i = 0; i + 1 < replacements.length; i += 2) {
+            message = message.replace(replacements[i], replacements[i + 1]);
+        }
+        player.sendMessage(ChatColor.translateAlternateColorCodes('&', prefix + message));
+    }
+
     public void send(Player player, String path, String... replacements) {
         String prefix = "&a[Terrenos] &r";
         String message = getConfig().getString(path);
