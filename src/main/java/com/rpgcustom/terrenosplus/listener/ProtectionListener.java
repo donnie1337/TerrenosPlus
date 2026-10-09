@@ -5,6 +5,7 @@ import com.rpgcustom.terrenosplus.model.Terreno;
 import com.rpgcustom.terrenosplus.service.TerrenoManager;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -14,10 +15,14 @@ import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.vehicle.VehicleEnterEvent;
 
 import java.util.Optional;
 
@@ -53,6 +58,53 @@ public final class ProtectionListener implements Listener {
         if (!manager.canBuild(event.getPlayer(), event.getClickedBlock().getLocation())) {
             event.setCancelled(true);
             deny(event.getPlayer(), event.getClickedBlock().getLocation());
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityInteract(PlayerInteractEntityEvent event) {
+        if (!plugin.getConfig().getBoolean("protection.interactions", true)) return;
+
+        Entity entity = event.getRightClicked();
+        if (!manager.canBuild(event.getPlayer(), entity.getLocation())) {
+            event.setCancelled(true);
+            deny(event.getPlayer(), entity.getLocation());
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityDamage(EntityDamageByEntityEvent event) {
+        if (!plugin.getConfig().getBoolean("protection.interactions", true)) return;
+        if (!(event.getDamager() instanceof Player player)) return;
+
+        Location location = event.getEntity().getLocation();
+        if (!manager.canBuild(player, location)) {
+            event.setCancelled(true);
+            deny(player, location);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onHangingBreak(HangingBreakByEntityEvent event) {
+        if (!plugin.getConfig().getBoolean("protection.interactions", true)) return;
+        if (!(event.getRemover() instanceof Player player)) return;
+
+        Location location = event.getEntity().getLocation();
+        if (!manager.canBuild(player, location)) {
+            event.setCancelled(true);
+            deny(player, location);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onVehicleEnter(VehicleEnterEvent event) {
+        if (!plugin.getConfig().getBoolean("protection.interactions", true)) return;
+        if (!(event.getEntered() instanceof Player player)) return;
+
+        Location location = event.getVehicle().getLocation();
+        if (!manager.canBuild(player, location)) {
+            event.setCancelled(true);
+            deny(player, location);
         }
     }
 
