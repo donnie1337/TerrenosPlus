@@ -7,7 +7,6 @@ import com.rpgcustom.terrenosplus.gui.TerrenosListGUI;
 import com.rpgcustom.terrenosplus.listener.TrackingStickListener;
 import com.rpgcustom.terrenosplus.service.MarcoManager;
 import com.rpgcustom.terrenosplus.service.TerrenoManager;
-import org.bukkit.block.BlockFace;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -134,7 +133,7 @@ public final class TerrenoCommand implements CommandExecutor {
                 return true;
             }
 
-            if (args.length < 2) {
+            if (args.length < 3) {
                 plugin.send(player, "messages.expand-usage");
                 return true;
             }
@@ -152,7 +151,11 @@ public final class TerrenoCommand implements CommandExecutor {
                 return true;
             }
 
-            TerrenoManager.Direction direction = facingDirection(player.getFacing());
+            TerrenoManager.Direction direction = parseDirection(args[2]);
+            if (direction == null) {
+                plugin.send(player, "messages.expand-direction-invalid");
+                return true;
+            }
 
             // O valor informado é a quantidade de Marcos que o jogador quer usar.
             // Para avançar a borda em 1 bloco, é necessário pagar toda a extensão
@@ -227,24 +230,18 @@ public final class TerrenoCommand implements CommandExecutor {
         player.sendMessage("§e/terreno remover §7- remove seu terreno atual");
         player.sendMessage("§e/terreno explosao §7- ativa ou desativa explosões no terreno");
         player.sendMessage("§e/terreno listar §7- lista seus terrenos");
-        player.sendMessage("§e/terreno expandir <quantidade> §7- expande na direção que você está olhando");
+        player.sendMessage("§e/terreno expandir <marcos> <norte|sul|leste|oeste> §7- expande o terreno");
         return true;
     }
 
-    private TerrenoManager.Direction facingDirection(BlockFace facing) {
-        return switch (facing) {
-            case NORTH, NORTH_NORTH_EAST, NORTH_NORTH_WEST -> TerrenoManager.Direction.NORTH;
-            case SOUTH, SOUTH_SOUTH_EAST, SOUTH_SOUTH_WEST -> TerrenoManager.Direction.SOUTH;
-            case EAST, EAST_NORTH_EAST, EAST_SOUTH_EAST -> TerrenoManager.Direction.EAST;
-            case WEST, WEST_NORTH_WEST, WEST_SOUTH_WEST -> TerrenoManager.Direction.WEST;
-            default -> {
-                int x = facing.getModX();
-                int z = facing.getModZ();
-                if (Math.abs(x) >= Math.abs(z)) {
-                    yield x >= 0 ? TerrenoManager.Direction.EAST : TerrenoManager.Direction.WEST;
-                }
-                yield z >= 0 ? TerrenoManager.Direction.SOUTH : TerrenoManager.Direction.NORTH;
-            }
+    private TerrenoManager.Direction parseDirection(String value) {
+        if (value == null) return null;
+        return switch (value.toLowerCase(java.util.Locale.ROOT)) {
+            case "norte", "north", "n" -> TerrenoManager.Direction.NORTH;
+            case "sul", "south", "s" -> TerrenoManager.Direction.SOUTH;
+            case "leste", "east", "e" -> TerrenoManager.Direction.EAST;
+            case "oeste", "west", "o" -> TerrenoManager.Direction.WEST;
+            default -> null;
         };
     }
 
