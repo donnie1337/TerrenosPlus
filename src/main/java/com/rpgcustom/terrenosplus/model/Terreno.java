@@ -56,6 +56,21 @@ public final class Terreno {
         ownerLastSeenAt = Math.max(ownerLastSeenAt, Math.max(0L, timestamp));
     }
 
+    public Terreno resized(int newMinX, int newMinZ, int newMaxX, int newMaxZ) {
+        return new Terreno(
+                id,
+                ownerId,
+                ownerName,
+                world,
+                newMinX,
+                newMinZ,
+                newMaxX,
+                newMaxZ,
+                createdAt,
+                ownerLastSeenAt
+        );
+    }
+
     public int width() { return maxX - minX + 1; }
     public int depth() { return maxZ - minZ + 1; }
     public long area() { return (long) width() * depth(); }
