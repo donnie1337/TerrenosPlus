@@ -143,9 +143,9 @@ public final class TrackingStickListener implements Listener {
             restoreCornerMarkers(player);
         }
 
-        var emerald = Material.EMERALD_BLOCK.createBlockData();
+        var gold = Material.GOLD_BLOCK.createBlockData();
         for (Location corner : corners) {
-            player.sendBlockChange(corner, emerald);
+            player.sendBlockChange(corner, gold);
         }
 
         activeMarkers.put(player.getUniqueId(), new MarkerState(terrain.id(), corners));
@@ -191,7 +191,7 @@ public final class TrackingStickListener implements Listener {
     }
 
     private void particle(Player player, Location location) {
-        player.spawnParticle(Particle.HAPPY_VILLAGER, location, 2, 0.05, 0.05, 0.05, 0.0);
+        player.spawnParticle(Particle.WAX_ON, location, 2, 0.05, 0.05, 0.05, 0.0);
     }
 
     private record MarkerState(UUID terrainId, List<Location> locations) {
