@@ -43,7 +43,7 @@ public final class TerrenosGUI {
         List<Terreno> own = manager.getByOwner(player.getUniqueId());
         inventory.setItem(SLOT_LIST, item(
                 Material.COMPASS,
-                "&b&lʟɪsᴛᴀ ᴅᴇ ᴛᴇʀʀᴇɴᴏs",
+                "&bLISTA DE TERRENOS",
                 List.of(
                         "",
                         "&fVisualize todos os seus",
@@ -57,7 +57,7 @@ public final class TerrenosGUI {
 
         inventory.setItem(SLOT_MANAGE, item(
                 Material.COMMAND_BLOCK,
-                "&b&lɢᴇʀᴇɴᴄɪᴀʀ ᴛᴇʀʀᴇɴᴏ",
+                "&bGERENCIAR TERRENO",
                 List.of(
                         "",
                         "&fModifique permissões e controle",
@@ -69,7 +69,7 @@ public final class TerrenosGUI {
 
         inventory.setItem(SLOT_MARCOS, item(
                 Material.SUNFLOWER,
-                "&b&lᴍᴀʀᴄᴏs",
+                "&bMARCOS",
                 List.of(
                         "",
                         "&fMarcos permitem expandir",
@@ -102,7 +102,7 @@ public final class TerrenosGUI {
 
         inventory.setItem(SLOT_EXPAND, item(
                 Material.GRASS_BLOCK,
-                "&b&lEXPANDIR TERRENO",
+                "&bEXPANDIR TERRENO",
                 List.of(
                         "",
                         "&fUse o comando:",
@@ -127,7 +127,7 @@ public final class TerrenosGUI {
         boolean visitorFly = terrain.visitorFlyEnabled();
         inventory.setItem(SLOT_VISITOR_FLY, item(
                 visitorFly ? Material.FEATHER : Material.IRON_BARS,
-                "&b&lFLY DE VISITANTES",
+                "&bFLY DE VISITANTES",
                 List.of(
                         "",
                         "&fControla o fly de outros jogadores",
@@ -144,7 +144,7 @@ public final class TerrenosGUI {
         boolean explosions = terrain.explosionsEnabled();
         inventory.setItem(SLOT_EXPLOSIONS, item(
                 explosions ? Material.TNT : Material.OBSIDIAN,
-                "&b&lEXPLOSÕES",
+                "&bEXPLOSÕES",
                 List.of(
                         "",
                         "&fControle explosões de TNT, Creepers",
@@ -158,7 +158,7 @@ public final class TerrenosGUI {
 
         inventory.setItem(SLOT_TRUSTED, item(
                 terrain.trustedPlayers().isEmpty() ? Material.GRAY_DYE : Material.PLAYER_HEAD,
-                "&b&lJOGADORES CONFIÁVEIS",
+                "&bJOGADORES CONFIÁVEIS",
                 List.of(
                         "",
                         "&fVeja quem possui trust",
@@ -174,7 +174,7 @@ public final class TerrenosGUI {
 
         inventory.setItem(SLOT_BACK, item(
                 Material.ARROW,
-                "&c&lVOLTAR",
+                "&cVOLTAR",
                 List.of("", "&7Clique para voltar.")
         ));
 
@@ -198,7 +198,7 @@ public final class TerrenosGUI {
         if (trusted.isEmpty()) {
             inventory.setItem(22, item(
                     Material.GRAY_DYE,
-                    "&7&lNENHUM JOGADOR",
+                    "&7NENHUM JOGADOR",
                     List.of(
                             "",
                             "&7Nenhum jogador possui trust",
