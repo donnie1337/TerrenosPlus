@@ -42,6 +42,10 @@ public final class MarcosGUIListener implements Listener {
             }
             if (slot == MarcosGUI.SLOT_DAILY) {
                 player.openInventory(DailyRewardsGUI.build(player, marcos));
+                return;
+            }
+            if (slot == MarcosGUI.SLOT_MISSIONS) {
+                player.sendMessage(color("&6[Marcos] &r&cO sistema de missões de Marcos ainda não foi implementado."));
             }
             return;
         }
