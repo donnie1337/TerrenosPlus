@@ -6,9 +6,15 @@ claims:
     - world_the_end
     - mining
 
-  minimum-width: 5
-  minimum-area: 25
+  # Todo terreno novo começa em exatamente 10x10.
+  minimum-width: 10
+  minimum-area: 100
+  initial-maximum-width: 10
   maximum-area-per-claim: 10000
+
+  expansion:
+    # 1 Marco = 1 bloco de expansão na direção escolhida.
+    marcos-per-block: 1
 
   # Limite de terrenos por cargo do CargoPlus.
   # Membro pode ter 3; qualquer outro cargo pode ter 5.
@@ -57,7 +63,8 @@ messages:
   disabled-world: "&cNão é possível criar terrenos neste mundo."
   first-corner: "&aPrimeiro canto selecionado em &f{x}, {z}&a. Clique no canto oposto."
   different-world: "&cOs dois cantos precisam estar no mesmo mundo."
-  too-small: "&cO terreno precisa ter pelo menos &f{min}x{min}&c blocos."
+  too-small: "&cO terreno inicial precisa ter &f{min}x{min}&c blocos."
+  initial-too-large: "&cO terreno inicial não pode passar de &f{max}x{max}&c blocos."
   too-large: "&cEsse terreno é grande demais. Limite: &f{max}&c blocos."
   overlap: "&cEsse terreno se sobrepõe ao terreno de &f{owner}&c."
   claim-limit: "&cVocê já atingiu o limite de &f{max}&c terrenos."
@@ -72,6 +79,12 @@ messages:
   no-claim: "&7Este local não possui dono."
   command-own-claim-only: "&cVocê precisa estar dentro de um terreno seu para usar este comando."
   info-owner: "&7Dono: &f{owner} &8| &7Área: &f{area} Blocos &8| &7Tamanho: &f{width}x{depth} &8| &7Data de criação: &f{created} &8| &7ID: &f{id}"
+  expanded: "&aTerreno expandido em &f{amount} blocos &apara &f{direction}&a. Novo tamanho: &f{width}x{depth} &8| &7Custo: &e{cost} Marcos &8| &7Saldo: &e{balance} Marcos"
+  expand-usage: "&cUse: /terreno expandir <quantidade>. A expansão acontece na direção que você está olhando."
+  expand-invalid: "&cInforme uma quantidade válida de blocos para expandir."
+  expand-no-marcos: "&cVocê precisa de &e{cost} Marcos &cpara esta expansão. Saldo atual: &e{balance} Marcos&c."
+  expand-overlap: "&cNão é possível expandir: a nova área encostaria no terreno de &f{owner}&c."
+  expand-too-large: "&cA expansão ultrapassaria o limite máximo de &f{max} blocos &cde área."
   removed: "&aTerreno removido."
   not-owner: "&cVocê não é o dono deste terreno."
   list-header: "&6Seus terrenos (&f{count}&6):"
