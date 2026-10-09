@@ -11,17 +11,16 @@ import java.util.List;
 
 public final class DailyRewardsGUI {
 
-    // Caminho em zigue-zague, inspirado em uma trilha de progresso.
-    public static final int[] DAY_SLOTS = {10, 20, 30, 40, 32, 24, 16};
-    public static final int SLOT_BACK = 47;
-    public static final int SLOT_PROFILE = 51;
+    public static final int[] DAY_SLOTS = {10, 11, 12, 13, 14, 15, 16};
+    public static final int SLOT_PROFILE = 29;
+    public static final int SLOT_BACK = 31;
 
     private DailyRewardsGUI() {
     }
 
     public static Inventory build(Player player, MarcoManager marcos) {
         MarcosGUIHolder holder = new MarcosGUIHolder(MarcosGUIHolder.View.DAILY);
-        Inventory inventory = Bukkit.createInventory(holder, 54, "Recompensas Diárias");
+        Inventory inventory = Bukkit.createInventory(holder, 36, "Recompensas Diárias");
         holder.setInventory(inventory);
 
         int currentIndex = marcos.getDailyCycleIndex(player.getUniqueId());
