@@ -229,17 +229,31 @@ public final class ClaimToolListener implements Listener {
         var world = plugin.getServer().getWorld(terreno.world());
         if (world == null) return;
 
-        int y = player.getLocation().getBlockY() + 1;
+        List<Location> corners = terrainCorners(terreno);
+        if (corners.size() != 4) return;
+
         int step = Math.max(1, Math.min(4, Math.max(terreno.width(), terreno.depth()) / 20));
         Particle.DustOptions yellow = new Particle.DustOptions(Color.YELLOW, 1.15f);
 
-        for (int x = terreno.minX(); x <= terreno.maxX(); x += step) {
-            yellowParticle(player, new Location(world, x + 0.5, y, terreno.minZ() + 0.5), yellow);
-            yellowParticle(player, new Location(world, x + 0.5, y, terreno.maxZ() + 0.5), yellow);
-        }
-        for (int z = terreno.minZ(); z <= terreno.maxZ(); z += step) {
-            yellowParticle(player, new Location(world, terreno.minX() + 0.5, y, z + 0.5), yellow);
-            yellowParticle(player, new Location(world, terreno.maxX() + 0.5, y, z + 0.5), yellow);
+        showYellowEdge(player, corners.get(0), corners.get(2), step, yellow);
+        showYellowEdge(player, corners.get(1), corners.get(3), step, yellow);
+        showYellowEdge(player, corners.get(0), corners.get(1), step, yellow);
+        showYellowEdge(player, corners.get(2), corners.get(3), step, yellow);
+    }
+
+    private void showYellowEdge(Player player, Location from, Location to, int step,
+                                Particle.DustOptions yellow) {
+        double dx = to.getX() - from.getX();
+        double dz = to.getZ() - from.getZ();
+        double horizontalDistance = Math.max(Math.abs(dx), Math.abs(dz));
+        int segments = Math.max(1, (int) Math.ceil(horizontalDistance / Math.max(1, step)));
+
+        for (int i = 0; i <= segments; i++) {
+            double progress = i / (double) segments;
+            double x = from.getX() + (dx * progress) + 0.5;
+            double y = from.getY() + ((to.getY() - from.getY()) * progress) + 1.10;
+            double z = from.getZ() + (dz * progress) + 0.5;
+            yellowParticle(player, new Location(from.getWorld(), x, y, z), yellow);
         }
     }
 
@@ -287,16 +301,34 @@ public final class ClaimToolListener implements Listener {
         var world = plugin.getServer().getWorld(terreno.world());
         if (world == null) return;
 
-        int y = player.getLocation().getBlockY() + 1;
+        List<Location> corners = terrainCorners(terreno);
+        if (corners.size() != 4) return;
+
         int step = Math.max(1, Math.min(4, Math.max(terreno.width(), terreno.depth()) / 20));
 
-        for (int x = terreno.minX(); x <= terreno.maxX(); x += step) {
-            particle(player, world.getName(), x, y, terreno.minZ(), particleType);
-            particle(player, world.getName(), x, y, terreno.maxZ(), particleType);
-        }
-        for (int z = terreno.minZ(); z <= terreno.maxZ(); z += step) {
-            particle(player, world.getName(), terreno.minX(), y, z, particleType);
-            particle(player, world.getName(), terreno.maxX(), y, z, particleType);
+        showParticleEdge(player, corners.get(0), corners.get(2), step, particleType);
+        showParticleEdge(player, corners.get(1), corners.get(3), step, particleType);
+        showParticleEdge(player, corners.get(0), corners.get(1), step, particleType);
+        showParticleEdge(player, corners.get(2), corners.get(3), step, particleType);
+    }
+
+    private void showParticleEdge(Player player, Location from, Location to, int step,
+                                  Particle particleType) {
+        double dx = to.getX() - from.getX();
+        double dz = to.getZ() - from.getZ();
+        double horizontalDistance = Math.max(Math.abs(dx), Math.abs(dz));
+        int segments = Math.max(1, (int) Math.ceil(horizontalDistance / Math.max(1, step)));
+
+        for (int i = 0; i <= segments; i++) {
+            double progress = i / (double) segments;
+            double x = from.getX() + (dx * progress) + 0.5;
+            double y = from.getY() + ((to.getY() - from.getY()) * progress) + 1.10;
+            double z = from.getZ() + (dz * progress) + 0.5;
+            player.spawnParticle(
+                    particleType,
+                    new Location(from.getWorld(), x, y, z),
+                    2, 0.05, 0.05, 0.05, 0.0
+            );
         }
     }
 
