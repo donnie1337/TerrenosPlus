@@ -92,7 +92,7 @@ public final class TerrenosPlus extends JavaPlugin {
 
         getLogger().info(
                 "TerrenosPlus ativado com " + terrenoManager.all().size()
-                        + " terreno(s). Comandos registrados: /terreno, /terrenos, /claim, /marcos e /marco."
+                        + " terreno(s). Comandos registrados: /terreno, /terrenos, /marcos e /marco."
         );
     }
 
