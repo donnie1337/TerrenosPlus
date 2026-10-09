@@ -7,12 +7,17 @@ import com.rpgcustom.terrenosplus.service.TerrenoManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 
 public final class TerrenosGUI {
 
@@ -23,7 +28,9 @@ public final class TerrenosGUI {
     public static final int SLOT_EXPAND = 11;
     public static final int SLOT_VISITOR_FLY = 13;
     public static final int SLOT_EXPLOSIONS = 15;
+    public static final int SLOT_TRUSTED = 20;
     public static final int SLOT_BACK = 22;
+    public static final int SLOT_TRUSTED_BACK = 49;
 
     private TerrenosGUI() {
     }
@@ -146,6 +153,22 @@ public final class TerrenosGUI {
                 )
         ));
 
+        inventory.setItem(SLOT_TRUSTED, item(
+                terrain.trustedPlayers().isEmpty() ? Material.GRAY_DYE : Material.PLAYER_HEAD,
+                "&b&lJOGADORES CONFIÁVEIS",
+                List.of(
+                        "",
+                        "&fVeja quem possui trust",
+                        "&fneste terreno.",
+                        "",
+                        "&7Jogadores com trust: &e" + terrain.trustedPlayers().size(),
+                        "",
+                        terrain.trustedPlayers().isEmpty()
+                                ? "&7Nenhum jogador possui trust."
+                                : "&aClique para visualizar"
+                )
+        ));
+
         inventory.setItem(SLOT_BACK, item(
                 Material.ARROW,
                 "&c&lVOLTAR",
@@ -153,6 +176,70 @@ public final class TerrenosGUI {
         ));
 
         return inventory;
+    }
+
+    public static Inventory trustedPlayers(Terreno terrain) {
+        TerrenosGUIHolder holder = new TerrenosGUIHolder(TerrenosGUIHolder.View.TRUSTED, 0);
+        Inventory inventory = Bukkit.createInventory(holder, 54, "Jogadores Confiáveis");
+        holder.setInventory(inventory);
+
+        List<OfflinePlayer> trusted = new ArrayList<>();
+        for (UUID uuid : terrain.trustedPlayers()) {
+            trusted.add(Bukkit.getOfflinePlayer(uuid));
+        }
+        trusted.sort(Comparator.comparing(
+                player -> player.getName() == null ? player.getUniqueId().toString() : player.getName(),
+                String.CASE_INSENSITIVE_ORDER
+        ));
+
+        if (trusted.isEmpty()) {
+            inventory.setItem(22, item(
+                    Material.GRAY_DYE,
+                    "&7&lNENHUM JOGADOR",
+                    List.of(
+                            "",
+                            "&7Nenhum jogador possui trust",
+                            "&7neste terreno.",
+                            "",
+                            "&eUse /terreno trust <nickname>"
+                    )
+            ));
+        } else {
+            int slot = 0;
+            for (OfflinePlayer trustedPlayer : trusted) {
+                if (slot >= 45) break;
+                inventory.setItem(slot++, trustedHead(trustedPlayer));
+            }
+        }
+
+        inventory.setItem(SLOT_TRUSTED_BACK, item(
+                Material.ARROW,
+                "&c&lVOLTAR",
+                List.of("", "&7Clique para voltar ao gerenciamento.")
+        ));
+
+        return inventory;
+    }
+
+    private static ItemStack trustedHead(OfflinePlayer player) {
+        ItemStack stack = new ItemStack(Material.PLAYER_HEAD);
+        ItemMeta rawMeta = stack.getItemMeta();
+        if (rawMeta instanceof SkullMeta meta) {
+            meta.setOwningPlayer(player);
+            String name = player.getName() == null
+                    ? player.getUniqueId().toString().substring(0, 8)
+                    : player.getName();
+            meta.setDisplayName(color("&a" + name));
+            meta.setLore(List.of(
+                    color(""),
+                    color("&7Este jogador possui acesso"),
+                    color("&7confiável a este terreno."),
+                    color(""),
+                    color("&eRemova com /terreno untrust " + name)
+            ));
+            stack.setItemMeta(meta);
+        }
+        return stack;
     }
 
     static ItemStack item(Material material, String name, List<String> lore) {
