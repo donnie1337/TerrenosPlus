@@ -65,7 +65,7 @@ public final class TerrenosPlus extends JavaPlugin {
 
         PluginCommand command = getCommand("terreno");
         if (command != null) {
-            command.setExecutor(new TerrenoCommand(this, terrenoManager, trackingStickListener));
+            command.setExecutor(new TerrenoCommand(this, terrenoManager, trackingStickListener, marcoManager));
         }
 
         PluginCommand marcosCommand = getCommand("marcos");
