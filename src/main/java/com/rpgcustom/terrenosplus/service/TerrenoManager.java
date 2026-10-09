@@ -58,6 +58,7 @@ public final class TerrenoManager implements TerrenosApi {
                 long createdAt = data.getLong(base + "created-at", 0L);
                 long ownerLastSeenAt = data.getLong(base + "last-seen-at", 0L);
                 boolean explosionsEnabled = data.getBoolean(base + "explosions-enabled", false);
+                boolean visitorFlyEnabled = data.getBoolean(base + "visitor-fly-enabled", true);
                 if (world == null) continue;
 
                 if (ownerLastSeenAt <= 0L) {
@@ -70,7 +71,7 @@ public final class TerrenoManager implements TerrenosApi {
                 Terreno terreno = new Terreno(
                         id, owner, ownerName, world,
                         minX, minZ, maxX, maxZ,
-                        createdAt, ownerLastSeenAt, explosionsEnabled
+                        createdAt, ownerLastSeenAt, explosionsEnabled, visitorFlyEnabled
                 );
                 terrenos.put(id, terreno);
                 index(terreno);
@@ -94,6 +95,7 @@ public final class TerrenoManager implements TerrenosApi {
             data.set(base + "created-at", terreno.createdAt());
             data.set(base + "last-seen-at", terreno.ownerLastSeenAt());
             data.set(base + "explosions-enabled", terreno.explosionsEnabled());
+            data.set(base + "visitor-fly-enabled", terreno.visitorFlyEnabled());
         }
 
         try {
@@ -233,6 +235,13 @@ public final class TerrenoManager implements TerrenosApi {
     public boolean setExplosionsEnabled(Terreno terreno, boolean enabled) {
         if (terreno == null || !terrenos.containsKey(terreno.id())) return false;
         terreno.setExplosionsEnabled(enabled);
+        save();
+        return true;
+    }
+
+    public boolean setVisitorFlyEnabled(Terreno terreno, boolean enabled) {
+        if (terreno == null || !terrenos.containsKey(terreno.id())) return false;
+        terreno.setVisitorFlyEnabled(enabled);
         save();
         return true;
     }
