@@ -17,6 +17,8 @@ marcos:
   hourly:
     minutes: 60
     rewards: [25, 50, 75]
+    title: "&e&l+{amount} Marcos"
+    subtitle: "&fRecompensa por &e1 hora &fonline"
   daily:
     # Sequência de 7 dias. Se o jogador perder um dia, volta ao Dia 1.
     rewards: [5, 5, 10, 10, 15, 20, 25]
