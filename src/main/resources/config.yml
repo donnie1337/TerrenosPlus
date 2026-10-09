@@ -16,6 +16,20 @@ claims:
     membro: 3
     default: 5
 
+  # Terrenos de jogadores que ficarem offline por este período perdem a proteção.
+  expiration:
+    enabled: true
+    offline-days: 90
+    check-interval-hours: 24
+
+    # Ao expirar, uma pequena quantidade de folhas persistentes é colocada
+    # somente em espaços de ar próximos à construção. Nenhum bloco existente
+    # é substituído. O efeito também é aplicado no Nether, End e Mineração.
+    abandoned-foliage:
+      enabled: true
+      material: OAK_LEAVES
+      max-leaves: 18
+
 marcos:
   hourly:
     minutes: 60
