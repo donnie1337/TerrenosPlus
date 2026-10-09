@@ -119,7 +119,7 @@ public final class MarcoManager {
                 seconds -= HOURLY_SECONDS;
                 int reward = HOURLY_REWARDS[ThreadLocalRandom.current().nextInt(HOURLY_REWARDS.length)];
                 add(uuid, reward);
-                plugin.send(player, "messages.marcos-hourly-reward",
+                plugin.sendMarcos(player, "messages.marcos-hourly-reward",
                         "{amount}", String.valueOf(reward),
                         "{balance}", String.valueOf(getBalance(uuid)));
                 showHourlyRewardTitle(player, reward);
@@ -215,7 +215,7 @@ public final class MarcoManager {
         dailyCycleIndex.put(uuid, (index + 1) % 7);
         save();
 
-        plugin.send(player, "messages.marcos-daily-claimed",
+        plugin.sendMarcos(player, "messages.marcos-daily-claimed",
                 "{amount}", String.valueOf(reward),
                 "{balance}", String.valueOf(getBalance(uuid)));
         return true;
