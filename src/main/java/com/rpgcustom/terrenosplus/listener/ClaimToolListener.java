@@ -225,7 +225,7 @@ public final class ClaimToolListener implements Listener {
     private void showSelectionCorner(Player player, Location location) {
         if (location == null || location.getWorld() == null) return;
         player.sendBlockChange(location, Material.EMERALD_BLOCK.createBlockData());
-        Location center = location.clone().add(0.5, 1.1, 0.5);
+        Location center = location.clone().add(0.5, 2.1, 0.5);
         player.spawnParticle(Particle.HAPPY_VILLAGER, center, 20, 0.35, 0.25, 0.35, 0.0);
     }
 
