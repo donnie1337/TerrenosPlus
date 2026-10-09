@@ -25,6 +25,7 @@ public final class ClaimToolListener implements Listener {
     private final TerrenoManager manager;
     private final Map<UUID, Location> firstCorners = new HashMap<>();
     private final Map<UUID, BlockData> firstCornerOriginal = new HashMap<>();
+    private final Map<UUID, org.bukkit.scheduler.BukkitTask> selectionTasks = new HashMap<>();
 
     public ClaimToolListener(TerrenosPlus plugin, TerrenoManager manager) {
         this.plugin = plugin;
@@ -56,12 +57,14 @@ public final class ClaimToolListener implements Listener {
             plugin.send(player, "messages.first-corner",
                     "{x}", String.valueOf(location.getBlockX()),
                     "{z}", String.valueOf(location.getBlockZ()));
-            showSelectionCorner(player, location);
+            startSelectionPreview(player, location);
             return;
         }
 
         BlockData firstOriginal = firstCornerOriginal.remove(playerId);
         BlockData secondOriginal = clicked.getBlockData().clone();
+        stopSelectionPreview(playerId);
+        showSelectionCorner(player, first);
         showSelectionCorner(player, location);
 
         if (!first.getWorld().equals(location.getWorld())) {
@@ -79,7 +82,18 @@ public final class ClaimToolListener implements Listener {
 
                 // Durante os primeiros 5 segundos, os dois pontos escolhidos
                 // permanecem em esmeralda e o contorno usa partículas verdes.
-                showGreenBoundary(player, terreno);
+                for (int i = 0; i < 10; i++) {
+                    plugin.getServer().getScheduler().runTaskLater(
+                            plugin,
+                            () -> {
+                                if (!player.isOnline()) return;
+                                showSelectionCorner(player, first);
+                                showSelectionCorner(player, location);
+                                showGreenBoundary(player, terreno);
+                            },
+                            i * 10L
+                    );
+                }
 
                 plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
                     if (!player.isOnline()) return;
@@ -138,7 +152,34 @@ public final class ClaimToolListener implements Listener {
         return plugin.getConfig().getStringList("claims.enabled-worlds").contains(worldName);
     }
 
+    private void startSelectionPreview(Player player, Location location) {
+        stopSelectionPreview(player.getUniqueId());
+
+        // Envia no tick seguinte e repete enquanto o segundo canto ainda não foi
+        // escolhido. Isso evita que um update normal do chunk sobrescreva o
+        // bloco virtual imediatamente após o clique.
+        org.bukkit.scheduler.BukkitTask task = plugin.getServer().getScheduler().runTaskTimer(
+                plugin,
+                () -> {
+                    if (!player.isOnline() || !firstCorners.containsKey(player.getUniqueId())) {
+                        stopSelectionPreview(player.getUniqueId());
+                        return;
+                    }
+                    showSelectionCorner(player, location);
+                },
+                1L,
+                10L
+        );
+        selectionTasks.put(player.getUniqueId(), task);
+    }
+
+    private void stopSelectionPreview(UUID playerId) {
+        org.bukkit.scheduler.BukkitTask task = selectionTasks.remove(playerId);
+        if (task != null) task.cancel();
+    }
+
     private void showSelectionCorner(Player player, Location location) {
+        if (location == null || location.getWorld() == null) return;
         player.sendBlockChange(location, Material.EMERALD_BLOCK.createBlockData());
         Location center = location.clone().add(0.5, 1.1, 0.5);
         player.spawnParticle(Particle.HAPPY_VILLAGER, center, 20, 0.35, 0.25, 0.35, 0.0);
