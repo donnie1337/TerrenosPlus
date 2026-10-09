@@ -56,9 +56,21 @@ public final class TerrenoManager implements TerrenosApi {
                 int maxX = data.getInt(base + "max-x");
                 int maxZ = data.getInt(base + "max-z");
                 long createdAt = data.getLong(base + "created-at", 0L);
+                long ownerLastSeenAt = data.getLong(base + "last-seen-at", 0L);
                 if (world == null) continue;
 
-                Terreno terreno = new Terreno(id, owner, ownerName, world, minX, minZ, maxX, maxZ, createdAt);
+                if (ownerLastSeenAt <= 0L) {
+                    long bukkitLastPlayed = plugin.getServer().getOfflinePlayer(owner).getLastPlayed();
+                    ownerLastSeenAt = bukkitLastPlayed > 0L
+                            ? bukkitLastPlayed
+                            : (createdAt > 0L ? createdAt : System.currentTimeMillis());
+                }
+
+                Terreno terreno = new Terreno(
+                        id, owner, ownerName, world,
+                        minX, minZ, maxX, maxZ,
+                        createdAt, ownerLastSeenAt
+                );
                 terrenos.put(id, terreno);
                 index(terreno);
             } catch (RuntimeException exception) {
@@ -79,6 +91,7 @@ public final class TerrenoManager implements TerrenosApi {
             data.set(base + "max-x", terreno.maxX());
             data.set(base + "max-z", terreno.maxZ());
             data.set(base + "created-at", terreno.createdAt());
+            data.set(base + "last-seen-at", terreno.ownerLastSeenAt());
         }
 
         try {
@@ -109,6 +122,7 @@ public final class TerrenoManager implements TerrenosApi {
                 first.getBlockZ(),
                 second.getBlockX(),
                 second.getBlockZ(),
+                System.currentTimeMillis(),
                 System.currentTimeMillis()
         );
 
@@ -207,6 +221,20 @@ public final class TerrenoManager implements TerrenosApi {
 
     public Collection<Terreno> all() {
         return Collections.unmodifiableCollection(terrenos.values());
+    }
+
+    public void markOwnerSeen(UUID ownerId, long timestamp) {
+        if (ownerId == null) return;
+
+        boolean changed = false;
+        for (Terreno terreno : terrenos.values()) {
+            if (!ownerId.equals(terreno.ownerId())) continue;
+            long before = terreno.ownerLastSeenAt();
+            terreno.markOwnerSeen(timestamp);
+            if (terreno.ownerLastSeenAt() != before) changed = true;
+        }
+
+        if (changed) save();
     }
 
     public boolean canBuild(Player player, Location location) {
