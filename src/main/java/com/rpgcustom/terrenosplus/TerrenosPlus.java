@@ -6,6 +6,7 @@ import com.rpgcustom.terrenosplus.command.TerrenoCommand;
 import com.rpgcustom.terrenosplus.listener.ClaimToolListener;
 import com.rpgcustom.terrenosplus.listener.ProtectionListener;
 import com.rpgcustom.terrenosplus.listener.TrackingStickListener;
+import com.rpgcustom.terrenosplus.listener.TerrainEnterListener;
 import com.rpgcustom.terrenosplus.gui.MarcosGUIListener;
 import com.rpgcustom.terrenosplus.gui.TerrenosGUIListener;
 import com.rpgcustom.terrenosplus.service.MarcoManager;
@@ -47,6 +48,8 @@ public final class TerrenosPlus extends JavaPlugin {
                 new ProtectionListener(this, terrenoManager), this);
         getServer().getPluginManager().registerEvents(
                 new TrackingStickListener(this, terrenoManager), this);
+        getServer().getPluginManager().registerEvents(
+                new TerrainEnterListener(terrenoManager), this);
         getServer().getPluginManager().registerEvents(
                 new TerrenosGUIListener(this, terrenoManager, marcoManager), this);
         getServer().getPluginManager().registerEvents(
