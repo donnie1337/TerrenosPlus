@@ -10,7 +10,7 @@ commands:
   terreno:
     description: Gerencia seus terrenos.
     usage: /terreno <info|remover|listar|trust <nickname>|untrust <nickname>|explosao|expandir <direcao> <quantidade>>
-    aliases: [terrenos, claim]
+    aliases: [terrenos]
   marcos:
     description: Abre o menu de Marcos.
     usage: /marcos [testtempo]
