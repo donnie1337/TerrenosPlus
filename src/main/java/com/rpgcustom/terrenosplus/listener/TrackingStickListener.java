@@ -12,8 +12,14 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
+
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class TrackingStickListener implements Listener {
 
@@ -21,6 +27,7 @@ public final class TrackingStickListener implements Listener {
 
     private final TerrenosPlus plugin;
     private final TerrenoManager manager;
+    private final Map<UUID, MarkerState> activeMarkers = new ConcurrentHashMap<>();
 
     public TrackingStickListener(TerrenosPlus plugin, TerrenoManager manager) {
         this.plugin = plugin;
@@ -38,20 +45,33 @@ public final class TrackingStickListener implements Listener {
 
     private void showHeldTrackerBoundaries() {
         for (Player player : plugin.getServer().getOnlinePlayers()) {
-            if (!isHoldingTrackingStick(player)) continue;
+            if (!isHoldingTrackingStick(player)) {
+                restoreCornerMarkers(player);
+                continue;
+            }
 
-            manager.find(player.getLocation()).ifPresent(terrain -> {
-                if (terrain.ownerId().equals(player.getUniqueId())
-                        || player.hasPermission("terrenosplus.admin")) {
-                    showBoundary(player, terrain);
-                }
-            });
+            var terrain = manager.find(player.getLocation());
+            if (terrain.isEmpty()
+                    || (!terrain.get().ownerId().equals(player.getUniqueId())
+                    && !player.hasPermission("terrenosplus.admin"))) {
+                restoreCornerMarkers(player);
+                continue;
+            }
+
+            Terreno current = terrain.get();
+            showBoundary(player, current);
+            showCornerMarkers(player, current);
         }
     }
 
     private boolean isHoldingTrackingStick(Player player) {
         return isTrackingStick(player.getInventory().getItemInMainHand())
                 || isTrackingStick(player.getInventory().getItemInOffHand());
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        activeMarkers.remove(event.getPlayer().getUniqueId());
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -78,6 +98,49 @@ public final class TrackingStickListener implements Listener {
 
         if (t.ownerId().equals(player.getUniqueId()) || player.hasPermission("terrenosplus.admin")) {
             showBoundary(player, t);
+            showCornerMarkers(player, t);
+        }
+    }
+
+    private void showCornerMarkers(Player player, Terreno terrain) {
+        var world = plugin.getServer().getWorld(terrain.world());
+        if (world == null) {
+            restoreCornerMarkers(player);
+            return;
+        }
+
+        List<Location> corners = List.of(
+                groundCorner(world, terrain.minX(), terrain.minZ()),
+                groundCorner(world, terrain.minX(), terrain.maxZ()),
+                groundCorner(world, terrain.maxX(), terrain.minZ()),
+                groundCorner(world, terrain.maxX(), terrain.maxZ())
+        );
+
+        MarkerState previous = activeMarkers.get(player.getUniqueId());
+        if (previous != null && !previous.terrainId().equals(terrain.id())) {
+            restoreCornerMarkers(player);
+        }
+
+        var emerald = Material.EMERALD_BLOCK.createBlockData();
+        for (Location corner : corners) {
+            player.sendBlockChange(corner, emerald);
+        }
+
+        activeMarkers.put(player.getUniqueId(), new MarkerState(terrain.id(), corners));
+    }
+
+    private Location groundCorner(org.bukkit.World world, int x, int z) {
+        int y = world.getHighestBlockYAt(x, z);
+        return new Location(world, x, y, z);
+    }
+
+    private void restoreCornerMarkers(Player player) {
+        MarkerState state = activeMarkers.remove(player.getUniqueId());
+        if (state == null) return;
+
+        for (Location location : state.locations()) {
+            if (location.getWorld() == null) continue;
+            player.sendBlockChange(location, location.getBlock().getBlockData());
         }
     }
 
@@ -107,5 +170,8 @@ public final class TrackingStickListener implements Listener {
 
     private void particle(Player player, Location location) {
         player.spawnParticle(Particle.HAPPY_VILLAGER, location, 2, 0.05, 0.05, 0.05, 0.0);
+    }
+
+    private record MarkerState(UUID terrainId, List<Location> locations) {
     }
 }
