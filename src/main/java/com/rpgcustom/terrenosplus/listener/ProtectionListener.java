@@ -24,12 +24,16 @@ import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.vehicle.VehicleEnterEvent;
 
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class ProtectionListener implements Listener {
 
     private final TerrenosPlus plugin;
     private final TerrenoManager manager;
+    private final Map<UUID, Long> denyMessageCooldownUntil = new ConcurrentHashMap<>();
 
     public ProtectionListener(TerrenosPlus plugin, TerrenoManager manager) {
         this.plugin = plugin;
@@ -200,6 +204,12 @@ public final class ProtectionListener implements Listener {
     }
 
     private void deny(Player player, Location location) {
+        long now = System.currentTimeMillis();
+        UUID playerId = player.getUniqueId();
+        long allowedAt = denyMessageCooldownUntil.getOrDefault(playerId, 0L);
+        if (now < allowedAt) return;
+
+        denyMessageCooldownUntil.put(playerId, now + 2_000L);
         manager.find(location).ifPresent(terreno ->
                 plugin.send(player, "messages.protected", "{owner}", terreno.ownerName()));
     }
