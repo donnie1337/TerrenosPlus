@@ -4,6 +4,7 @@ import com.rpgcustom.terrenosplus.TerrenosPlus;
 import com.rpgcustom.terrenosplus.model.Terreno;
 import com.rpgcustom.terrenosplus.service.TerrenoManager;
 import org.bukkit.Color;
+import org.bukkit.HeightMap;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -79,6 +80,7 @@ public final class ClaimToolListener implements Listener {
         switch (result.type()) {
             case SUCCESS -> {
                 Terreno terreno = result.terreno();
+                placeCenterCraftingTable(terreno);
                 plugin.send(player, "messages.created", "{area}", String.valueOf(terreno.area()));
                 showCreatedSubtitle(player);
 
@@ -144,6 +146,31 @@ public final class ClaimToolListener implements Listener {
                         "{max}", String.valueOf(result.value()));
             }
         }
+    }
+
+    private void placeCenterCraftingTable(Terreno terreno) {
+        var world = plugin.getServer().getWorld(terreno.world());
+        if (world == null) return;
+
+        int centerX = (terreno.minX() + terreno.maxX()) >> 1;
+        int centerZ = (terreno.minZ() + terreno.maxZ()) >> 1;
+
+        // Usa a altura do solo ignorando folhas, para a bancada não aparecer
+        // em cima da copa de árvores quando o centro do terreno estiver em mata.
+        int groundY = world.getHighestBlockYAt(centerX, centerZ, HeightMap.MOTION_BLOCKING_NO_LEAVES);
+        Block target = world.getBlockAt(centerX, groundY + 1, centerZ);
+
+        // O ponto acima do solo deve estar livre; por segurança, só substituímos
+        // blocos passáveis para não destruir construções já existentes.
+        if (!target.isPassable() && target.getType() != Material.AIR) {
+            plugin.getLogger().warning(
+                    "Não foi possível colocar a bancada no centro do terreno " + terreno.id()
+                            + ": espaço ocupado em " + centerX + ", " + (groundY + 1) + ", " + centerZ
+            );
+            return;
+        }
+
+        target.setType(Material.CRAFTING_TABLE, true);
     }
 
     private void showCreatedSubtitle(Player player) {
