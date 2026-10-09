@@ -13,6 +13,14 @@ claims:
     membro: 3
     default: 5
 
+marcos:
+  hourly:
+    minutes: 60
+    rewards: [25, 50, 75]
+  daily:
+    # Sequência de 7 dias. Se o jogador perder um dia, volta ao Dia 1.
+    rewards: [5, 5, 10, 10, 15, 20, 25]
+
 tool:
   material: GOLDEN_SHOVEL
 
@@ -40,6 +48,8 @@ messages:
   protected: "&cEste terreno pertence a &f{owner}&c."
   tracker-unprotected: "&7Este bloco não está protegido por nenhum terreno."
   tracker-info: "&7Dono: &f{owner} &8| &7Tamanho: &f{width}x{depth}"
+  marcos-hourly-reward: "&fVocê ficou 1 hora online e recebeu &e{amount} Marcos&f. Saldo: &e{balance}&f."
+  marcos-daily-claimed: "&fRecompensa diária coletada: &e+{amount} Marcos&f. Saldo: &e{balance}&f."
   no-claim: "&7Este local não possui dono."
   command-own-claim-only: "&cVocê precisa estar dentro de um terreno seu para usar este comando."
   info-owner: "&7Dono: &f{owner} &8| &7Área: &f{area} &8| &7ID: &f{id}"
