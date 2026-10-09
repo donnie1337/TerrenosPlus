@@ -1,6 +1,8 @@
 package com.rpgcustom.terrenosplus.gui;
 
+import com.rpgcustom.terrenosplus.TerrenosPlus;
 import com.rpgcustom.terrenosplus.model.Terreno;
+import com.rpgcustom.terrenosplus.service.MarcoManager;
 import com.rpgcustom.terrenosplus.service.TerrenoManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -17,6 +19,13 @@ public final class TerrenosGUI {
     public static final int SLOT_LIST = 11;
     public static final int SLOT_MANAGE = 13;
     public static final int SLOT_MARCOS = 15;
+
+    public static final int SLOT_EXPAND_NORTH = 10;
+    public static final int SLOT_EXPAND_WEST = 12;
+    public static final int SLOT_EXPLOSIONS = 13;
+    public static final int SLOT_EXPAND_EAST = 14;
+    public static final int SLOT_EXPAND_SOUTH = 16;
+    public static final int SLOT_BACK = 22;
 
     private TerrenosGUI() {
     }
@@ -74,6 +83,66 @@ public final class TerrenosGUI {
         ));
 
         return inventory;
+    }
+
+    public static Inventory manage(Player player, Terreno terrain, MarcoManager marcos, TerrenosPlus plugin) {
+        TerrenosGUIHolder holder = new TerrenosGUIHolder(TerrenosGUIHolder.View.MANAGE, 0);
+        Inventory inventory = Bukkit.createInventory(holder, 27, "Gerenciar Terreno");
+        holder.setInventory(inventory);
+
+        int costPerBlock = Math.max(1, plugin.getConfig().getInt("claims.expansion.marcos-per-block", 1));
+        long northSouthCost = (long) terrain.width() * costPerBlock;
+        long eastWestCost = (long) terrain.depth() * costPerBlock;
+        int balance = marcos.getBalance(player.getUniqueId());
+
+        inventory.setItem(SLOT_EXPAND_NORTH, expansionItem(
+                Material.ARROW, "Norte", northSouthCost, balance));
+        inventory.setItem(SLOT_EXPAND_SOUTH, expansionItem(
+                Material.ARROW, "Sul", northSouthCost, balance));
+        inventory.setItem(SLOT_EXPAND_WEST, expansionItem(
+                Material.ARROW, "Oeste", eastWestCost, balance));
+        inventory.setItem(SLOT_EXPAND_EAST, expansionItem(
+                Material.ARROW, "Leste", eastWestCost, balance));
+
+        boolean explosions = terrain.explosionsEnabled();
+        inventory.setItem(SLOT_EXPLOSIONS, item(
+                explosions ? Material.TNT : Material.OBSIDIAN,
+                "&b&lEXPLOSÕES",
+                List.of(
+                        "",
+                        "&fControle explosões de TNT, Creepers",
+                        "&fe outras fontes dentro do terreno.",
+                        "",
+                        "&7Estado: " + (explosions ? "&aATIVADAS" : "&cDESATIVADAS"),
+                        "",
+                        "&eClique para " + (explosions ? "desativar" : "ativar")
+                )
+        ));
+
+        inventory.setItem(SLOT_BACK, item(
+                Material.ARROW,
+                "&c&lVOLTAR",
+                List.of("", "&7Clique para voltar.")
+        ));
+
+        return inventory;
+    }
+
+    private static ItemStack expansionItem(Material material, String direction, long cost, int balance) {
+        return item(
+                material,
+                "&b&lEXPANDIR " + direction.toUpperCase(),
+                List.of(
+                        "",
+                        "&fAvança esta borda em &e1 bloco&f.",
+                        "&fO custo corresponde à faixa inteira.",
+                        "",
+                        "&7Custo: &e" + cost + " Marcos",
+                        "&7Seu saldo: &e" + balance + " Marcos",
+                        "",
+                        balance >= cost ? "&aClique para expandir" : "&cMarcos insuficientes"
+                )
+        );
     }
 
     static ItemStack item(Material material, String name, List<String> lore) {
