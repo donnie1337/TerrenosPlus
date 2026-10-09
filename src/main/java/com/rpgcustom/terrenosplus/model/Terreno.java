@@ -18,25 +18,33 @@ public final class Terreno {
     private final long createdAt;
     private long ownerLastSeenAt;
     private boolean explosionsEnabled;
+    private boolean visitorFlyEnabled;
 
     public Terreno(UUID id, UUID ownerId, String ownerName, String world,
                    int x1, int z1, int x2, int z2) {
-        this(id, ownerId, ownerName, world, x1, z1, x2, z2, 0L, 0L, false);
+        this(id, ownerId, ownerName, world, x1, z1, x2, z2, 0L, 0L, false, true);
     }
 
     public Terreno(UUID id, UUID ownerId, String ownerName, String world,
                    int x1, int z1, int x2, int z2, long createdAt) {
-        this(id, ownerId, ownerName, world, x1, z1, x2, z2, createdAt, createdAt, false);
+        this(id, ownerId, ownerName, world, x1, z1, x2, z2, createdAt, createdAt, false, true);
     }
 
     public Terreno(UUID id, UUID ownerId, String ownerName, String world,
                    int x1, int z1, int x2, int z2, long createdAt, long ownerLastSeenAt) {
-        this(id, ownerId, ownerName, world, x1, z1, x2, z2, createdAt, ownerLastSeenAt, false);
+        this(id, ownerId, ownerName, world, x1, z1, x2, z2, createdAt, ownerLastSeenAt, false, true);
     }
 
     public Terreno(UUID id, UUID ownerId, String ownerName, String world,
                    int x1, int z1, int x2, int z2, long createdAt, long ownerLastSeenAt,
                    boolean explosionsEnabled) {
+        this(id, ownerId, ownerName, world, x1, z1, x2, z2, createdAt, ownerLastSeenAt,
+                explosionsEnabled, true);
+    }
+
+    public Terreno(UUID id, UUID ownerId, String ownerName, String world,
+                   int x1, int z1, int x2, int z2, long createdAt, long ownerLastSeenAt,
+                   boolean explosionsEnabled, boolean visitorFlyEnabled) {
         this.id = id;
         this.ownerId = ownerId;
         this.ownerName = ownerName;
@@ -48,6 +56,7 @@ public final class Terreno {
         this.createdAt = Math.max(0L, createdAt);
         this.ownerLastSeenAt = Math.max(0L, ownerLastSeenAt);
         this.explosionsEnabled = explosionsEnabled;
+        this.visitorFlyEnabled = visitorFlyEnabled;
     }
 
     public UUID id() { return id; }
@@ -62,6 +71,8 @@ public final class Terreno {
     public long ownerLastSeenAt() { return ownerLastSeenAt; }
     public boolean explosionsEnabled() { return explosionsEnabled; }
     public void setExplosionsEnabled(boolean enabled) { explosionsEnabled = enabled; }
+    public boolean visitorFlyEnabled() { return visitorFlyEnabled; }
+    public void setVisitorFlyEnabled(boolean enabled) { visitorFlyEnabled = enabled; }
     public void markOwnerSeen(long timestamp) {
         ownerLastSeenAt = Math.max(ownerLastSeenAt, Math.max(0L, timestamp));
     }
@@ -78,7 +89,8 @@ public final class Terreno {
                 newMaxZ,
                 createdAt,
                 ownerLastSeenAt,
-                explosionsEnabled
+                explosionsEnabled,
+                visitorFlyEnabled
         );
     }
 
