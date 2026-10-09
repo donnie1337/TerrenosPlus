@@ -9,13 +9,19 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class TerrainEnterListener implements Listener {
 
+    private static final long TITLE_COOLDOWN_MS = 5000L;
+
     private final TerrenoManager manager;
+    private final Map<UUID, ShownTitle> lastShown = new ConcurrentHashMap<>();
 
     public TerrainEnterListener(TerrenoManager manager) {
         this.manager = manager;
@@ -38,7 +44,25 @@ public final class TerrainEnterListener implements Listener {
         // não repete o title.
         if (terrain.id().equals(previousId)) return;
 
-        showTitle(event.getPlayer(), terrain.ownerName());
+        Player player = event.getPlayer();
+        long now = System.currentTimeMillis();
+        ShownTitle shown = lastShown.get(player.getUniqueId());
+
+        // Evita spam quando o jogador fica cruzando rapidamente a mesma borda.
+        // Entrar em outro terreno continua mostrando imediatamente.
+        if (shown != null
+                && shown.terrainId().equals(terrain.id())
+                && now - shown.shownAt() < TITLE_COOLDOWN_MS) {
+            return;
+        }
+
+        lastShown.put(player.getUniqueId(), new ShownTitle(terrain.id(), now));
+        showTitle(player, terrain.ownerName());
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        lastShown.remove(event.getPlayer().getUniqueId());
     }
 
     private void showTitle(Player player, String owner) {
@@ -61,4 +85,6 @@ public final class TerrainEnterListener implements Listener {
     private String color(String text) {
         return ChatColor.translateAlternateColorCodes('&', text == null ? "" : text);
     }
+
+    private record ShownTitle(UUID terrainId, long shownAt) {}
 }
