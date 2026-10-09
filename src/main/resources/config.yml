@@ -31,6 +31,8 @@ messages:
   claim-limit: "&cVocê já atingiu o limite de &f{max}&c terrenos."
   created: "&aTerreno criado com &f{area}&a blocos."
   protected: "&cEste terreno pertence a &f{owner}&c."
+  tracker-unprotected: "&7Este bloco não está protegido por nenhum terreno."
+  tracker-info: "&7Dono: &f{owner} &8| &7Área: &f{area} blocos &8| &7Tamanho: &f{width}x{depth}"
   no-claim: "&7Este local não possui dono."
   command-own-claim-only: "&cVocê precisa estar dentro de um terreno seu para usar este comando."
   info-owner: "&7Dono: &f{owner} &8| &7Área: &f{area} &8| &7ID: &f{id}"
