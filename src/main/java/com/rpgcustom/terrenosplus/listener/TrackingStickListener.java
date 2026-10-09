@@ -29,6 +29,7 @@ public final class TrackingStickListener implements Listener {
     private final TerrenoManager manager;
     private final Map<UUID, MarkerState> activeMarkers = new ConcurrentHashMap<>();
     private final Map<UUID, UUID> trackedTerrains = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> markerExpiry = new ConcurrentHashMap<>();
 
     public TrackingStickListener(TerrenosPlus plugin, TerrenoManager manager) {
         this.plugin = plugin;
@@ -46,11 +47,32 @@ public final class TrackingStickListener implements Listener {
 
     private void showHeldTrackerBoundaries() {
         for (Player player : plugin.getServer().getOnlinePlayers()) {
+            UUID playerId = player.getUniqueId();
             if (!isHoldingTrackingStick(player)) {
-                trackedTerrains.remove(player.getUniqueId());
+                long expiresAt = markerExpiry.getOrDefault(playerId, 0L);
+                if (expiresAt == 0L && trackedTerrains.containsKey(playerId)) {
+                    markerExpiry.put(playerId, System.currentTimeMillis() + 15_000L);
+                    expiresAt = markerExpiry.get(playerId);
+                }
+
+                if (expiresAt > System.currentTimeMillis()) {
+                    UUID trackedId = trackedTerrains.get(playerId);
+                    if (trackedId != null) {
+                        manager.getById(trackedId).ifPresent(terrain -> {
+                            showBoundary(player, terrain);
+                            showCornerMarkers(player, terrain);
+                        });
+                    }
+                    continue;
+                }
+
+                markerExpiry.remove(playerId);
+                trackedTerrains.remove(playerId);
                 restoreCornerMarkers(player);
                 continue;
             }
+
+            markerExpiry.remove(playerId);
 
             UUID trackedId = trackedTerrains.get(player.getUniqueId());
             if (trackedId == null) {
@@ -89,6 +111,7 @@ public final class TrackingStickListener implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         UUID uuid = event.getPlayer().getUniqueId();
+        markerExpiry.remove(uuid);
         trackedTerrains.remove(uuid);
         activeMarkers.remove(uuid);
     }
