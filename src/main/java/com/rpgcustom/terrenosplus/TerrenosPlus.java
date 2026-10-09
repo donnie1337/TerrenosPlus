@@ -4,6 +4,7 @@ import com.rpgcustom.terrenosplus.api.TerrenosApi;
 import com.rpgcustom.terrenosplus.command.TerrenoCommand;
 import com.rpgcustom.terrenosplus.listener.ClaimToolListener;
 import com.rpgcustom.terrenosplus.listener.ProtectionListener;
+import com.rpgcustom.terrenosplus.gui.TerrenosGUIListener;
 import com.rpgcustom.terrenosplus.service.TerrenoManager;
 import org.bukkit.ChatColor;
 import org.bukkit.command.PluginCommand;
@@ -33,6 +34,8 @@ public final class TerrenosPlus extends JavaPlugin {
                 new ClaimToolListener(this, terrenoManager), this);
         getServer().getPluginManager().registerEvents(
                 new ProtectionListener(this, terrenoManager), this);
+        getServer().getPluginManager().registerEvents(
+                new TerrenosGUIListener(this, terrenoManager), this);
 
         PluginCommand command = getCommand("terreno");
         if (command != null) {
