@@ -6,7 +6,12 @@ claims:
   minimum-width: 5
   minimum-area: 25
   maximum-area-per-claim: 10000
-  maximum-claims-per-player: 5
+
+  # Limite de terrenos por cargo do CargoPlus.
+  # Membro pode ter 3; qualquer outro cargo pode ter 5.
+  limits:
+    membro: 3
+    default: 5
 
 tool:
   material: GOLDEN_SHOVEL
