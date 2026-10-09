@@ -51,9 +51,8 @@ public final class TerrenosGUIListener implements Listener {
                 return;
             }
 
-            if (slot == TerrenosGUI.SLOT_BLOCKS) {
-                player.closeInventory();
-                player.performCommand("shop");
+            if (slot == TerrenosGUI.SLOT_MARCOS) {
+                player.sendMessage(color("&b&lᴍᴀʀᴄᴏs &8• &fVocê ganha Marcos por tempo jogado, missões e recompensas diárias."));
             }
             return;
         }
