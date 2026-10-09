@@ -4,6 +4,7 @@ import com.rpgcustom.terrenosplus.TerrenosPlus;
 import com.rpgcustom.terrenosplus.model.Terreno;
 import com.rpgcustom.terrenosplus.gui.TerrenosGUI;
 import com.rpgcustom.terrenosplus.gui.TerrenosListGUI;
+import com.rpgcustom.terrenosplus.listener.TrackingStickListener;
 import com.rpgcustom.terrenosplus.service.TerrenoManager;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -16,10 +17,13 @@ public final class TerrenoCommand implements CommandExecutor {
 
     private final TerrenosPlus plugin;
     private final TerrenoManager manager;
+    private final TrackingStickListener trackingStickListener;
 
-    public TerrenoCommand(TerrenosPlus plugin, TerrenoManager manager) {
+    public TerrenoCommand(TerrenosPlus plugin, TerrenoManager manager,
+                          TrackingStickListener trackingStickListener) {
         this.plugin = plugin;
         this.manager = manager;
+        this.trackingStickListener = trackingStickListener;
     }
 
     @Override
@@ -69,6 +73,7 @@ public final class TerrenoCommand implements CommandExecutor {
             }
 
             manager.remove(t);
+            trackingStickListener.onTerrainRemoved(player, t);
             plugin.send(player, "messages.removed");
             return true;
         }
