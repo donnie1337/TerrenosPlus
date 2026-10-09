@@ -61,7 +61,7 @@ public final class MarcosGUIListener implements Listener {
                 long last = unavailableMessageCooldown.getOrDefault(player.getUniqueId(), 0L);
                 if (now - last >= MESSAGE_COOLDOWN_MS) {
                     unavailableMessageCooldown.put(player.getUniqueId(), now);
-                    player.sendMessage(color("&6[Marcos] &r&fEsta recompensa ainda não está disponível."));
+                    player.sendMessage(color("&6[Marcos] &r&cEsta recompensa ainda não está disponível."));
                 }
                 return;
             }
