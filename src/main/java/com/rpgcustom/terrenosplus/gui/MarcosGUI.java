@@ -15,14 +15,15 @@ public final class MarcosGUI {
     public static final int SLOT_PLAYTIME = 11;
     public static final int SLOT_DAILY = 13;
     public static final int SLOT_MISSIONS = 15;
-    public static final int SLOT_PROFILE = 40;
+    public static final int SLOT_BACK = 27;
+    public static final int SLOT_PROFILE = 31;
 
     private MarcosGUI() {
     }
 
     public static Inventory main(Player player, MarcoManager marcos) {
         MarcosGUIHolder holder = new MarcosGUIHolder(MarcosGUIHolder.View.MAIN);
-        Inventory inventory = Bukkit.createInventory(holder, 45, "Marcos");
+        Inventory inventory = Bukkit.createInventory(holder, 36, "Marcos");
         holder.setInventory(inventory);
 
         long seconds = marcos.getSecondsUntilHourlyReward(player.getUniqueId());
@@ -70,6 +71,12 @@ public final class MarcosGUI {
                         "&7Sistema de missões será integrado",
                         "&7ao progresso de Marcos."
                 )
+        ));
+
+        inventory.setItem(SLOT_BACK, TerrenosGUI.item(
+                Material.ARROW,
+                "&cVoltar",
+                List.of("", "&7Voltar ao menu de terrenos")
         ));
 
         inventory.setItem(SLOT_PROFILE, profile(player, marcos));
