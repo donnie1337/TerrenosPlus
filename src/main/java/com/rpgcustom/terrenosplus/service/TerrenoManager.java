@@ -57,6 +57,7 @@ public final class TerrenoManager implements TerrenosApi {
                 int maxZ = data.getInt(base + "max-z");
                 long createdAt = data.getLong(base + "created-at", 0L);
                 long ownerLastSeenAt = data.getLong(base + "last-seen-at", 0L);
+                boolean explosionsEnabled = data.getBoolean(base + "explosions-enabled", false);
                 if (world == null) continue;
 
                 if (ownerLastSeenAt <= 0L) {
@@ -69,7 +70,7 @@ public final class TerrenoManager implements TerrenosApi {
                 Terreno terreno = new Terreno(
                         id, owner, ownerName, world,
                         minX, minZ, maxX, maxZ,
-                        createdAt, ownerLastSeenAt
+                        createdAt, ownerLastSeenAt, explosionsEnabled
                 );
                 terrenos.put(id, terreno);
                 index(terreno);
@@ -92,6 +93,7 @@ public final class TerrenoManager implements TerrenosApi {
             data.set(base + "max-z", terreno.maxZ());
             data.set(base + "created-at", terreno.createdAt());
             data.set(base + "last-seen-at", terreno.ownerLastSeenAt());
+            data.set(base + "explosions-enabled", terreno.explosionsEnabled());
         }
 
         try {
@@ -226,6 +228,13 @@ public final class TerrenoManager implements TerrenosApi {
                     exception);
             return memberLimit;
         }
+    }
+
+    public boolean setExplosionsEnabled(Terreno terreno, boolean enabled) {
+        if (terreno == null || !terrenos.containsKey(terreno.id())) return false;
+        terreno.setExplosionsEnabled(enabled);
+        save();
+        return true;
     }
 
     public boolean remove(Terreno terreno) {
