@@ -79,6 +79,7 @@ public final class ClaimToolListener implements Listener {
             case SUCCESS -> {
                 Terreno terreno = result.terreno();
                 plugin.send(player, "messages.created", "{area}", String.valueOf(terreno.area()));
+                showCreatedSubtitle(player);
 
                 // Durante os primeiros 5 segundos, os dois pontos escolhidos
                 // permanecem em esmeralda e o contorno usa partículas verdes.
@@ -103,6 +104,7 @@ public final class ClaimToolListener implements Listener {
 
                     showGoldClaimMarkers(player, terreno);
                     showYellowBoundary(player, terreno);
+                    plugin.send(player, "messages.configure-after-create");
 
                     // Depois de mais 15 segundos, restaura os blocos reais.
                     plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
@@ -141,6 +143,20 @@ public final class ClaimToolListener implements Listener {
                         "{max}", String.valueOf(result.value()));
             }
         }
+    }
+
+    private void showCreatedSubtitle(Player player) {
+        String subtitle = plugin.getConfig().getString(
+                "messages.created-subtitle",
+                "&aTerreno criado com sucesso!"
+        );
+        player.sendTitle(
+                "",
+                org.bukkit.ChatColor.translateAlternateColorCodes('&', subtitle == null ? "" : subtitle),
+                10,
+                50,
+                10
+        );
     }
 
     private Material toolMaterial() {
