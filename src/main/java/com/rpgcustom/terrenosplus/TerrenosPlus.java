@@ -20,6 +20,8 @@ public final class TerrenosPlus extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        getConfig().options().copyDefaults(true);
+        saveConfig();
 
         terrenoManager = new TerrenoManager(this);
         terrenoManager.load();
@@ -61,8 +63,15 @@ public final class TerrenosPlus extends JavaPlugin {
     }
 
     public void send(Player player, String path, String... replacements) {
-        String prefix = getConfig().getString("messages.prefix", "&6&lTerrenos &8» &r");
-        String message = getConfig().getString(path, path);
+        String prefix = getConfig().getString("messages.prefix", "&a[Terrenos] &r");
+        String message = getConfig().getString(path);
+        if (message == null || message.equals(path)) {
+            message = switch (path) {
+                case "messages.tracker-unprotected" -> "&7Este bloco não está protegido por nenhum terreno.";
+                case "messages.tracker-info" -> "&7Dono: &f{owner} &8| &7Área: &f{area} blocos &8| &7Tamanho: &f{width}x{depth}";
+                default -> path;
+            };
+        }
         for (int i = 0; i + 1 < replacements.length; i += 2) {
             message = message.replace(replacements[i], replacements[i + 1]);
         }
