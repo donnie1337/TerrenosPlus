@@ -271,15 +271,16 @@ public final class ClaimToolListener implements Listener {
 
         int step = Math.max(1, Math.min(4, Math.max(terreno.width(), terreno.depth()) / 20));
         Particle.DustOptions yellow = new Particle.DustOptions(Color.YELLOW, 1.15f);
+        double fixedY = boundaryY(corners);
 
-        showYellowEdge(player, corners.get(0), corners.get(2), step, yellow);
-        showYellowEdge(player, corners.get(1), corners.get(3), step, yellow);
-        showYellowEdge(player, corners.get(0), corners.get(1), step, yellow);
-        showYellowEdge(player, corners.get(2), corners.get(3), step, yellow);
+        showYellowEdge(player, corners.get(0), corners.get(2), step, yellow, fixedY);
+        showYellowEdge(player, corners.get(1), corners.get(3), step, yellow, fixedY);
+        showYellowEdge(player, corners.get(0), corners.get(1), step, yellow, fixedY);
+        showYellowEdge(player, corners.get(2), corners.get(3), step, yellow, fixedY);
     }
 
     private void showYellowEdge(Player player, Location from, Location to, int step,
-                                Particle.DustOptions yellow) {
+                                Particle.DustOptions yellow, double fixedY) {
         double dx = to.getX() - from.getX();
         double dz = to.getZ() - from.getZ();
         double horizontalDistance = Math.max(Math.abs(dx), Math.abs(dz));
@@ -288,9 +289,8 @@ public final class ClaimToolListener implements Listener {
         for (int i = 0; i <= segments; i++) {
             double progress = i / (double) segments;
             double x = from.getX() + (dx * progress) + 0.5;
-            double y = from.getY() + ((to.getY() - from.getY()) * progress) + 1.10;
             double z = from.getZ() + (dz * progress) + 0.5;
-            yellowParticle(player, new Location(from.getWorld(), x, y, z), yellow);
+            yellowParticle(player, new Location(from.getWorld(), x, fixedY, z), yellow);
         }
     }
 
@@ -342,15 +342,16 @@ public final class ClaimToolListener implements Listener {
         if (corners.size() != 4) return;
 
         int step = Math.max(1, Math.min(4, Math.max(terreno.width(), terreno.depth()) / 20));
+        double fixedY = boundaryY(corners);
 
-        showParticleEdge(player, corners.get(0), corners.get(2), step, particleType);
-        showParticleEdge(player, corners.get(1), corners.get(3), step, particleType);
-        showParticleEdge(player, corners.get(0), corners.get(1), step, particleType);
-        showParticleEdge(player, corners.get(2), corners.get(3), step, particleType);
+        showParticleEdge(player, corners.get(0), corners.get(2), step, particleType, fixedY);
+        showParticleEdge(player, corners.get(1), corners.get(3), step, particleType, fixedY);
+        showParticleEdge(player, corners.get(0), corners.get(1), step, particleType, fixedY);
+        showParticleEdge(player, corners.get(2), corners.get(3), step, particleType, fixedY);
     }
 
     private void showParticleEdge(Player player, Location from, Location to, int step,
-                                  Particle particleType) {
+                                  Particle particleType, double fixedY) {
         double dx = to.getX() - from.getX();
         double dz = to.getZ() - from.getZ();
         double horizontalDistance = Math.max(Math.abs(dx), Math.abs(dz));
@@ -359,14 +360,23 @@ public final class ClaimToolListener implements Listener {
         for (int i = 0; i <= segments; i++) {
             double progress = i / (double) segments;
             double x = from.getX() + (dx * progress) + 0.5;
-            double y = from.getY() + ((to.getY() - from.getY()) * progress) + 1.10;
             double z = from.getZ() + (dz * progress) + 0.5;
             player.spawnParticle(
                     particleType,
-                    new Location(from.getWorld(), x, y, z),
+                    new Location(from.getWorld(), x, fixedY, z),
                     2, 0.05, 0.05, 0.05, 0.0
             );
         }
+    }
+
+    private double boundaryY(List<Location> corners) {
+        double highest = corners.stream()
+                .mapToDouble(Location::getY)
+                .max()
+                .orElse(0.0D);
+        // Mantém toda a linha na mesma altura e um bloco acima dos marcadores,
+        // para o efeito não ficar colado nos blocos da borda.
+        return highest + 2.10D;
     }
 
     private void particle(Player player, String worldName, int x, int y, int z, Particle particleType) {
