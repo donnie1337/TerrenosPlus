@@ -42,13 +42,13 @@ public final class DailyRewardsGUI {
 
             if (completed) {
                 material = Material.LIME_CONCRETE;
-                name = "&a&lᴅɪᴀ " + (day + 1) + " ✓";
+                name = "&a&lDIA " + (day + 1) + " ✓";
                 lore.add("&aRecompensa coletada");
                 lore.add("");
                 lore.add("&7+" + reward + " Marcos");
             } else if (today) {
                 material = Material.SUNFLOWER;
-                name = "&e&lᴅɪᴀ " + (day + 1);
+                name = "&e&lDIA " + (day + 1);
                 lore.add("&fRecompensa disponível");
                 lore.add("");
                 lore.add("&e+" + reward + " Marcos");
@@ -56,7 +56,7 @@ public final class DailyRewardsGUI {
                 lore.add("&aClique para coletar");
             } else {
                 material = day == 6 ? Material.GOLD_BLOCK : Material.GRAY_CONCRETE;
-                name = day == 6 ? "&6&lᴅɪᴀ 7" : "&7&lᴅɪᴀ " + (day + 1);
+                name = day == 6 ? "&6&lDIA 7" : "&7&lDIA " + (day + 1);
                 lore.add("&7Complete os dias anteriores");
                 lore.add("");
                 lore.add("&8+" + reward + " Marcos");
@@ -81,14 +81,18 @@ public final class DailyRewardsGUI {
         SkullMeta meta = (SkullMeta) head.getItemMeta();
         if (meta != null) {
             meta.setOwningPlayer(player);
-            meta.setDisplayName(TerrenosGUI.color("&b&lᴍᴀʀᴄᴏs"));
+            meta.setDisplayName(TerrenosGUI.color("&b" + player.getName()));
             meta.setLore(List.of(
+                    "",
+                    TerrenosGUI.color("&7Informações dos seus Marcos"),
                     "",
                     TerrenosGUI.color("&fSaldo atual: &e" + marcos.getBalance(player.getUniqueId()) + " Marcos"),
                     "",
+                    TerrenosGUI.color("&8Marcos são usados para expandir terrenos."),
+                    "",
                     TerrenosGUI.color(claimedToday
-                            ? "&7Você já coletou a recompensa de hoje."
-                            : "&aVocê possui uma recompensa disponível.")
+                            ? "&cVocê já coletou a recompensa de hoje."
+                            : "&aVocê tem uma recompensa para coletar.")
             ));
             head.setItemMeta(meta);
         }
