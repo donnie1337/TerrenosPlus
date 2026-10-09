@@ -3,13 +3,13 @@ package com.rpgcustom.terrenosplus.command;
 import com.rpgcustom.terrenosplus.TerrenosPlus;
 import com.rpgcustom.terrenosplus.model.Terreno;
 import com.rpgcustom.terrenosplus.gui.TerrenosGUI;
+import com.rpgcustom.terrenosplus.gui.TerrenosListGUI;
 import com.rpgcustom.terrenosplus.service.TerrenoManager;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.List;
 import java.util.Optional;
 
 public final class TerrenoCommand implements CommandExecutor {
@@ -74,14 +74,7 @@ public final class TerrenoCommand implements CommandExecutor {
         }
 
         if (args[0].equalsIgnoreCase("listar")) {
-            List<Terreno> list = manager.getByOwner(player.getUniqueId());
-            plugin.send(player, "messages.list-header", "{count}", String.valueOf(list.size()));
-            for (Terreno t : list) {
-                plugin.send(player, "messages.list-item",
-                        "{id}", t.id().toString().substring(0, 8),
-                        "{world}", t.world(),
-                        "{area}", String.valueOf(t.area()));
-            }
+            player.openInventory(TerrenosListGUI.build(player, manager, 0));
             return true;
         }
 
