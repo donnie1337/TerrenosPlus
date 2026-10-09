@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class TerrenosGUIHolder implements InventoryHolder {
 
-    public enum View { MAIN, LIST, MANAGE }
+    public enum View { MAIN, LIST, MANAGE, DAILY }
 
     private final View view;
     private final int page;
