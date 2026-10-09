@@ -11,37 +11,29 @@ import java.util.List;
 
 public final class TerrenosListGUI {
 
-    public static final int ITEMS_PER_PAGE = 21;
-    public static final int SLOT_PREVIOUS = 38;
-    public static final int SLOT_BACK = 40;
-    public static final int SLOT_NEXT = 42;
-    private static final int[] CONTENT_SLOTS = {
-            10, 11, 12, 13, 14, 15, 16,
-            19, 20, 21, 22, 23, 24, 25,
-            28, 29, 30, 31, 32, 33, 34
-    };
+    private static final int[] COMPACT_CONTENT_SLOTS = {2, 3, 5, 6};
+    private static final int[] EXPANDED_CONTENT_SLOTS = {2, 3, 5, 6, 13};
 
     private TerrenosListGUI() {
     }
 
     public static Inventory build(Player player, TerrenoManager manager, int page) {
         List<Terreno> terrains = manager.getByOwner(player.getUniqueId());
-        int pages = Math.max(1, (int) Math.ceil(terrains.size() / (double) ITEMS_PER_PAGE));
-        int validPage = Math.max(0, Math.min(page, pages - 1));
 
-        TerrenosGUIHolder holder = new TerrenosGUIHolder(TerrenosGUIHolder.View.LIST, validPage);
-        Inventory inventory = Bukkit.createInventory(holder, 45, "Terrenos > Página #" + (validPage + 1));
+        boolean compact = terrains.size() <= 4;
+        int size = compact ? 9 : 18;
+        int[] contentSlots = compact ? COMPACT_CONTENT_SLOTS : EXPANDED_CONTENT_SLOTS;
+
+        TerrenosGUIHolder holder = new TerrenosGUIHolder(TerrenosGUIHolder.View.LIST, 0);
+        Inventory inventory = Bukkit.createInventory(holder, size, "Lista de Terrenos");
         holder.setInventory(inventory);
 
-        int start = validPage * ITEMS_PER_PAGE;
-        for (int i = 0; i < ITEMS_PER_PAGE; i++) {
-            int index = start + i;
-            if (index >= terrains.size()) break;
-
-            Terreno terrain = terrains.get(index);
-            inventory.setItem(CONTENT_SLOTS[i], TerrenosGUI.item(
+        int visible = Math.min(terrains.size(), contentSlots.length);
+        for (int i = 0; i < visible; i++) {
+            Terreno terrain = terrains.get(i);
+            inventory.setItem(contentSlots[i], TerrenosGUI.item(
                     Material.GRASS_BLOCK,
-                    "&aTerreno #" + (index + 1),
+                    "&aTerreno #" + (i + 1),
                     List.of(
                             "",
                             "&fMundo: &e" + terrain.world(),
@@ -56,8 +48,14 @@ public final class TerrenosListGUI {
             ));
         }
 
+        inventory.setItem(backSlot(size), TerrenosGUI.item(
+                Material.ARROW,
+                "&cVoltar",
+                List.of("", "&7Voltar ao menu de terrenos")
+        ));
+
         if (terrains.isEmpty()) {
-            inventory.setItem(22, TerrenosGUI.item(
+            inventory.setItem(4, TerrenosGUI.item(
                     Material.GRAY_DYE,
                     "&7Nenhum terreno protegido",
                     List.of(
@@ -70,22 +68,10 @@ public final class TerrenosListGUI {
             ));
         }
 
-        if (validPage > 0) {
-            inventory.setItem(SLOT_PREVIOUS, TerrenosGUI.item(
-                    Material.ARROW, "&aAnterior", List.of("", "&7Página anterior")
-            ));
-        }
-
-        inventory.setItem(SLOT_BACK, TerrenosGUI.item(
-                Material.ARROW, "&cVoltar", List.of("", "&7Voltar ao menu de terrenos")
-        ));
-
-        if (validPage + 1 < pages) {
-            inventory.setItem(SLOT_NEXT, TerrenosGUI.item(
-                    Material.ARROW, "&aPróxima", List.of("", "&7Próxima página")
-            ));
-        }
-
         return inventory;
+    }
+
+    public static int backSlot(int inventorySize) {
+        return inventorySize <= 9 ? 0 : 9;
     }
 }
