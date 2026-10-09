@@ -55,9 +55,10 @@ public final class TerrenoManager implements TerrenosApi {
                 int minZ = data.getInt(base + "min-z");
                 int maxX = data.getInt(base + "max-x");
                 int maxZ = data.getInt(base + "max-z");
+                long createdAt = data.getLong(base + "created-at", 0L);
                 if (world == null) continue;
 
-                Terreno terreno = new Terreno(id, owner, ownerName, world, minX, minZ, maxX, maxZ);
+                Terreno terreno = new Terreno(id, owner, ownerName, world, minX, minZ, maxX, maxZ, createdAt);
                 terrenos.put(id, terreno);
                 index(terreno);
             } catch (RuntimeException exception) {
@@ -77,6 +78,7 @@ public final class TerrenoManager implements TerrenosApi {
             data.set(base + "min-z", terreno.minZ());
             data.set(base + "max-x", terreno.maxX());
             data.set(base + "max-z", terreno.maxZ());
+            data.set(base + "created-at", terreno.createdAt());
         }
 
         try {
@@ -106,7 +108,8 @@ public final class TerrenoManager implements TerrenosApi {
                 first.getBlockX(),
                 first.getBlockZ(),
                 second.getBlockX(),
-                second.getBlockZ()
+                second.getBlockZ(),
+                System.currentTimeMillis()
         );
 
         int minWidth = Math.max(1, plugin.getConfig().getInt("claims.minimum-width", 5));
