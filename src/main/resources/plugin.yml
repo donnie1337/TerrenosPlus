@@ -13,7 +13,7 @@ commands:
     aliases: [terrenos, claim]
   marcos:
     description: Abre o menu de Marcos.
-    usage: /marcos
+    usage: /marcos [testtempo]
     aliases: [marco]
 
 permissions:
