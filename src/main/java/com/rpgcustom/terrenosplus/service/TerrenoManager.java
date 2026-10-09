@@ -93,7 +93,7 @@ public final class TerrenoManager implements TerrenosApi {
             return CreateResult.differentWorld();
         }
 
-        int maxClaims = Math.max(1, plugin.getConfig().getInt("claims.maximum-claims-per-player", 5));
+        int maxClaims = resolveMaxClaims(player);
         if (getByOwner(player.getUniqueId()).size() >= maxClaims) {
             return CreateResult.limit(maxClaims);
         }
@@ -130,6 +130,40 @@ public final class TerrenoManager implements TerrenosApi {
         index(candidate);
         save();
         return CreateResult.success(candidate);
+    }
+
+    private int resolveMaxClaims(Player player) {
+        int memberLimit = Math.max(1, plugin.getConfig().getInt("claims.limits.membro", 3));
+        int defaultLimit = Math.max(1, plugin.getConfig().getInt("claims.limits.default", 5));
+
+        try {
+            var cargoPlus = plugin.getServer().getPluginManager().getPlugin("CargoPlus");
+            if (cargoPlus == null || !cargoPlus.isEnabled()) {
+                return memberLimit;
+            }
+
+            var apiMethod = cargoPlus.getClass().getMethod("api");
+            Object api = apiMethod.invoke(cargoPlus);
+            if (api == null) {
+                return memberLimit;
+            }
+
+            var getGroup = api.getClass().getMethod("getGroup", UUID.class);
+            Object groupValue = getGroup.invoke(api, player.getUniqueId());
+            String group = groupValue == null ? "" : String.valueOf(groupValue).trim();
+
+            if (group.equalsIgnoreCase("membro") || group.isBlank()) {
+                return memberLimit;
+            }
+
+            return defaultLimit;
+        } catch (ReflectiveOperationException | LinkageError exception) {
+            plugin.getLogger().log(Level.WARNING,
+                    "Não foi possível consultar o CargoPlus para o limite de terrenos de "
+                            + player.getName() + ". Aplicando limite de membro.",
+                    exception);
+            return memberLimit;
+        }
     }
 
     public boolean remove(Terreno terreno) {
