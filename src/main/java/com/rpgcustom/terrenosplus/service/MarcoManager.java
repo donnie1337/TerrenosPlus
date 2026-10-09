@@ -1,6 +1,7 @@
 package com.rpgcustom.terrenosplus.service;
 
 import com.rpgcustom.terrenosplus.TerrenosPlus;
+import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -121,6 +122,7 @@ public final class MarcoManager {
                 plugin.send(player, "messages.marcos-hourly-reward",
                         "{amount}", String.valueOf(reward),
                         "{balance}", String.valueOf(getBalance(uuid)));
+                showHourlyRewardTitle(player, reward);
             }
 
             playedSeconds.put(uuid, seconds);
@@ -128,6 +130,28 @@ public final class MarcoManager {
         }
 
         if (changed) save();
+    }
+
+    private void showHourlyRewardTitle(Player player, int reward) {
+        String title = plugin.getConfig().getString(
+                "marcos.hourly.title",
+                "&e&l+" + reward + " Marcos"
+        );
+        String subtitle = plugin.getConfig().getString(
+                "marcos.hourly.subtitle",
+                "&fRecompensa por &e1 hora &fonline"
+        );
+
+        title = title.replace("{amount}", String.valueOf(reward));
+        subtitle = subtitle.replace("{amount}", String.valueOf(reward));
+
+        player.sendTitle(
+                ChatColor.translateAlternateColorCodes('&', title),
+                ChatColor.translateAlternateColorCodes('&', subtitle),
+                10,
+                60,
+                10
+        );
     }
 
     public int getBalance(UUID uuid) {
