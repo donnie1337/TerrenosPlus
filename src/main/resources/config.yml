@@ -6,9 +6,9 @@ claims:
     - world_the_end
     - mining
 
-  # Todo terreno novo começa em exatamente 10x10.
-  minimum-width: 10
-  minimum-area: 100
+  # Terrenos novos podem começar entre 5x5 e 10x10.
+  minimum-width: 5
+  minimum-area: 25
   initial-maximum-width: 10
   maximum-area-per-claim: 10000
 
