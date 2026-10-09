@@ -7,6 +7,7 @@ import com.rpgcustom.terrenosplus.gui.TerrenosListGUI;
 import com.rpgcustom.terrenosplus.listener.TrackingStickListener;
 import com.rpgcustom.terrenosplus.service.MarcoManager;
 import com.rpgcustom.terrenosplus.service.TerrenoManager;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -99,6 +100,68 @@ public final class TerrenoCommand implements CommandExecutor, TabCompleter {
             manager.remove(t);
             trackingStickListener.onTerrainRemoved(player, t);
             plugin.send(player, "messages.removed");
+            return true;
+        }
+
+        if (args[0].equalsIgnoreCase("trust") || args[0].equalsIgnoreCase("untrust")) {
+            Optional<Terreno> terreno = manager.find(player.getLocation());
+            if (terreno.isEmpty()) {
+                plugin.send(player, "messages.no-claim");
+                return true;
+            }
+
+            Terreno t = terreno.get();
+            if (!t.ownerId().equals(player.getUniqueId())) {
+                plugin.send(player, "messages.not-owner");
+                return true;
+            }
+
+            boolean trust = args[0].equalsIgnoreCase("trust");
+            if (args.length < 2) {
+                plugin.send(player, trust ? "messages.trust-usage" : "messages.untrust-usage");
+                return true;
+            }
+
+            String targetName = args[1];
+            Player onlineTarget = plugin.getServer().getPlayerExact(targetName);
+            OfflinePlayer target = onlineTarget != null
+                    ? onlineTarget
+                    : plugin.getServer().getOfflinePlayer(targetName);
+
+            if (!target.isOnline() && !target.hasPlayedBefore()) {
+                plugin.send(player, "messages.trust-player-not-found", "{player}", targetName);
+                return true;
+            }
+
+            UUID targetId = target.getUniqueId();
+            String resolvedName = target.getName() != null ? target.getName() : targetName;
+
+            if (targetId.equals(player.getUniqueId())) {
+                plugin.send(player, "messages.trust-self");
+                return true;
+            }
+
+            if (trust) {
+                if (t.isTrusted(targetId)) {
+                    plugin.send(player, "messages.trust-already", "{player}", resolvedName);
+                    return true;
+                }
+                if (!manager.trust(t, targetId)) {
+                    plugin.send(player, "messages.trust-failed", "{player}", resolvedName);
+                    return true;
+                }
+                plugin.send(player, "messages.trust-added", "{player}", resolvedName);
+            } else {
+                if (!t.isTrusted(targetId)) {
+                    plugin.send(player, "messages.untrust-not-trusted", "{player}", resolvedName);
+                    return true;
+                }
+                if (!manager.untrust(t, targetId)) {
+                    plugin.send(player, "messages.trust-failed", "{player}", resolvedName);
+                    return true;
+                }
+                plugin.send(player, "messages.trust-removed", "{player}", resolvedName);
+            }
             return true;
         }
 
@@ -234,6 +297,8 @@ public final class TerrenoCommand implements CommandExecutor, TabCompleter {
 
         player.sendMessage("§e/terreno info §7- mostra o dono do local");
         player.sendMessage("§e/terreno remover §7- remove seu terreno atual");
+        player.sendMessage("§e/terreno trust <nickname> §7- dá acesso ao jogador neste terreno");
+        player.sendMessage("§e/terreno untrust <nickname> §7- remove o acesso do jogador");
         player.sendMessage("§e/terreno explosao §7- ativa ou desativa explosões no terreno");
         player.sendMessage("§e/terreno listar §7- lista seus terrenos");
         player.sendMessage("§e/terreno expandir <marcos> <norte|sul|leste|oeste> §7- expande o terreno");
@@ -245,7 +310,35 @@ public final class TerrenoCommand implements CommandExecutor, TabCompleter {
         if (!(sender instanceof Player player)) return List.of();
 
         if (args.length == 1) {
-            return filterSuggestions(args[0], List.of("info", "remover", "listar", "explosao", "expandir"));
+            return filterSuggestions(args[0],
+                    List.of("info", "remover", "listar", "trust", "untrust", "explosao", "expandir"));
+        }
+
+        if ((args[0].equalsIgnoreCase("trust") || args[0].equalsIgnoreCase("untrust"))
+                && args.length == 2) {
+            Optional<Terreno> terrain = manager.find(player.getLocation());
+            if (terrain.isEmpty() || !terrain.get().ownerId().equals(player.getUniqueId())) {
+                return List.of();
+            }
+
+            Terreno t = terrain.get();
+            List<String> names = new ArrayList<>();
+
+            if (args[0].equalsIgnoreCase("trust")) {
+                for (Player online : plugin.getServer().getOnlinePlayers()) {
+                    if (online.getUniqueId().equals(player.getUniqueId())) continue;
+                    if (t.isTrusted(online.getUniqueId())) continue;
+                    names.add(online.getName());
+                }
+            } else {
+                for (UUID trustedId : t.trustedPlayers()) {
+                    OfflinePlayer trusted = plugin.getServer().getOfflinePlayer(trustedId);
+                    if (trusted.getName() != null) names.add(trusted.getName());
+                }
+            }
+
+            names.sort(String.CASE_INSENSITIVE_ORDER);
+            return filterSuggestions(args[1], names);
         }
 
         if (!args[0].equalsIgnoreCase("expandir")) return List.of();
