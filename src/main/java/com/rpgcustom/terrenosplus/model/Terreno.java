@@ -3,6 +3,9 @@ package com.rpgcustom.terrenosplus.model;
 import com.rpgcustom.terrenosplus.api.TerrenosApi;
 import org.bukkit.Location;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 public final class Terreno {
@@ -19,32 +22,41 @@ public final class Terreno {
     private long ownerLastSeenAt;
     private boolean explosionsEnabled;
     private boolean visitorFlyEnabled;
+    private final Set<UUID> trustedPlayers;
 
     public Terreno(UUID id, UUID ownerId, String ownerName, String world,
                    int x1, int z1, int x2, int z2) {
-        this(id, ownerId, ownerName, world, x1, z1, x2, z2, 0L, 0L, false, true);
+        this(id, ownerId, ownerName, world, x1, z1, x2, z2, 0L, 0L, false, true, Set.of());
     }
 
     public Terreno(UUID id, UUID ownerId, String ownerName, String world,
                    int x1, int z1, int x2, int z2, long createdAt) {
-        this(id, ownerId, ownerName, world, x1, z1, x2, z2, createdAt, createdAt, false, true);
+        this(id, ownerId, ownerName, world, x1, z1, x2, z2, createdAt, createdAt, false, true, Set.of());
     }
 
     public Terreno(UUID id, UUID ownerId, String ownerName, String world,
                    int x1, int z1, int x2, int z2, long createdAt, long ownerLastSeenAt) {
-        this(id, ownerId, ownerName, world, x1, z1, x2, z2, createdAt, ownerLastSeenAt, false, true);
+        this(id, ownerId, ownerName, world, x1, z1, x2, z2, createdAt, ownerLastSeenAt, false, true, Set.of());
     }
 
     public Terreno(UUID id, UUID ownerId, String ownerName, String world,
                    int x1, int z1, int x2, int z2, long createdAt, long ownerLastSeenAt,
                    boolean explosionsEnabled) {
         this(id, ownerId, ownerName, world, x1, z1, x2, z2, createdAt, ownerLastSeenAt,
-                explosionsEnabled, true);
+                explosionsEnabled, true, Set.of());
     }
 
     public Terreno(UUID id, UUID ownerId, String ownerName, String world,
                    int x1, int z1, int x2, int z2, long createdAt, long ownerLastSeenAt,
                    boolean explosionsEnabled, boolean visitorFlyEnabled) {
+        this(id, ownerId, ownerName, world, x1, z1, x2, z2, createdAt, ownerLastSeenAt,
+                explosionsEnabled, visitorFlyEnabled, Set.of());
+    }
+
+    public Terreno(UUID id, UUID ownerId, String ownerName, String world,
+                   int x1, int z1, int x2, int z2, long createdAt, long ownerLastSeenAt,
+                   boolean explosionsEnabled, boolean visitorFlyEnabled,
+                   Set<UUID> trustedPlayers) {
         this.id = id;
         this.ownerId = ownerId;
         this.ownerName = ownerName;
@@ -57,6 +69,7 @@ public final class Terreno {
         this.ownerLastSeenAt = Math.max(0L, ownerLastSeenAt);
         this.explosionsEnabled = explosionsEnabled;
         this.visitorFlyEnabled = visitorFlyEnabled;
+        this.trustedPlayers = new HashSet<>(trustedPlayers == null ? Set.of() : trustedPlayers);
     }
 
     public UUID id() { return id; }
@@ -73,6 +86,16 @@ public final class Terreno {
     public void setExplosionsEnabled(boolean enabled) { explosionsEnabled = enabled; }
     public boolean visitorFlyEnabled() { return visitorFlyEnabled; }
     public void setVisitorFlyEnabled(boolean enabled) { visitorFlyEnabled = enabled; }
+    public boolean isTrusted(UUID playerId) { return playerId != null && trustedPlayers.contains(playerId); }
+    public boolean trust(UUID playerId) {
+        return playerId != null && !ownerId.equals(playerId) && trustedPlayers.add(playerId);
+    }
+    public boolean untrust(UUID playerId) {
+        return playerId != null && trustedPlayers.remove(playerId);
+    }
+    public Set<UUID> trustedPlayers() {
+        return Collections.unmodifiableSet(trustedPlayers);
+    }
     public void markOwnerSeen(long timestamp) {
         ownerLastSeenAt = Math.max(ownerLastSeenAt, Math.max(0L, timestamp));
     }
@@ -90,7 +113,8 @@ public final class Terreno {
                 createdAt,
                 ownerLastSeenAt,
                 explosionsEnabled,
-                visitorFlyEnabled
+                visitorFlyEnabled,
+                trustedPlayers
         );
     }
 
