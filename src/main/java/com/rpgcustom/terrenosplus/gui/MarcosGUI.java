@@ -81,7 +81,7 @@ public final class MarcosGUI {
 
         inventory.setItem(SLOT_INFO, TerrenosGUI.item(
                 Material.BOOK,
-                "&e&lᴄᴏᴍᴏ ғᴜɴᴄɪᴏɴᴀᴍ ᴏs ᴍᴀʀᴄᴏs",
+                "&eᴄᴏᴍᴏ ғᴜɴᴄɪᴏɴᴀᴍ ᴏs ᴍᴀʀᴄᴏs",
                 List.of(
                         "",
                         "&fMarcos são usados para expandir",
