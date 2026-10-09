@@ -4,6 +4,10 @@ import com.rpgcustom.terrenosplus.TerrenosPlus;
 import com.rpgcustom.terrenosplus.model.Terreno;
 import com.rpgcustom.terrenosplus.service.MarcoManager;
 import com.rpgcustom.terrenosplus.service.TerrenoManager;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -88,7 +92,24 @@ public final class TerrenosGUIListener implements Listener {
 
             if (slot == TerrenosGUI.SLOT_EXPAND) {
                 player.closeInventory();
-                plugin.send(player, "messages.expand-usage");
+
+                Component suggestion = Component.text("/terreno expandir ")
+                        .color(NamedTextColor.YELLOW)
+                        .clickEvent(ClickEvent.suggestCommand("/terreno expandir "))
+                        .hoverEvent(HoverEvent.showText(
+                                Component.text("Clique para preencher o comando no chat")
+                                        .color(NamedTextColor.GREEN)));
+
+                player.sendMessage(
+                        Component.text("[Terrenos] ").color(NamedTextColor.GREEN)
+                                .append(Component.text("Clique aqui para preencher: ")
+                                        .color(NamedTextColor.WHITE))
+                                .append(suggestion)
+                );
+                player.sendMessage(
+                        Component.text("Depois escolha a quantidade de Marcos e a direção: norte, sul, leste ou oeste.")
+                                .color(NamedTextColor.GRAY)
+                );
                 return;
             }
 
