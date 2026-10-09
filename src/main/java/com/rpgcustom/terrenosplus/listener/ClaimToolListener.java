@@ -272,7 +272,8 @@ public final class ClaimToolListener implements Listener {
         var world = plugin.getServer().getWorld(terreno.world());
         if (world == null) return;
 
-        List<Location> corners = terrainCorners(terreno);
+        double boundaryY = player.getLocation().getY() + 1.0D;
+        List<Location> corners = boundaryCorners(terreno, boundaryY);
         if (corners.size() != 4) return;
 
         int step = Math.max(1, Math.min(4, Math.max(terreno.width(), terreno.depth()) / 20));
@@ -294,7 +295,7 @@ public final class ClaimToolListener implements Listener {
         for (int i = 0; i <= segments; i++) {
             double progress = i / (double) segments;
             double x = from.getX() + (dx * progress) + 0.5;
-            double y = from.getY() + ((to.getY() - from.getY()) * progress) + 2.10D;
+            double y = from.getY();
             double z = from.getZ() + (dz * progress) + 0.5;
             yellowParticle(player, new Location(from.getWorld(), x, y, z), yellow);
         }
@@ -340,11 +341,24 @@ public final class ClaimToolListener implements Listener {
         return new Location(world, x, y, z);
     }
 
+    private List<Location> boundaryCorners(Terreno terreno, double y) {
+        var world = plugin.getServer().getWorld(terreno.world());
+        if (world == null) return List.of();
+
+        return List.of(
+                new Location(world, terreno.minX(), y, terreno.minZ()),
+                new Location(world, terreno.minX(), y, terreno.maxZ()),
+                new Location(world, terreno.maxX(), y, terreno.minZ()),
+                new Location(world, terreno.maxX(), y, terreno.maxZ())
+        );
+    }
+
     private void showBoundary(Player player, Terreno terreno, Particle particleType) {
         var world = plugin.getServer().getWorld(terreno.world());
         if (world == null) return;
 
-        List<Location> corners = terrainCorners(terreno);
+        double boundaryY = player.getLocation().getY() + 1.0D;
+        List<Location> corners = boundaryCorners(terreno, boundaryY);
         if (corners.size() != 4) return;
 
         int step = Math.max(1, Math.min(4, Math.max(terreno.width(), terreno.depth()) / 20));
