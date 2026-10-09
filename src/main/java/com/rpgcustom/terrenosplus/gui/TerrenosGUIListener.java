@@ -2,6 +2,7 @@ package com.rpgcustom.terrenosplus.gui;
 
 import com.rpgcustom.terrenosplus.TerrenosPlus;
 import com.rpgcustom.terrenosplus.model.Terreno;
+import com.rpgcustom.terrenosplus.listener.VisitorFlyListener;
 import com.rpgcustom.terrenosplus.service.MarcoManager;
 import com.rpgcustom.terrenosplus.service.TerrenoManager;
 import net.kyori.adventure.text.Component;
@@ -22,11 +23,14 @@ public final class TerrenosGUIListener implements Listener {
     private final TerrenosPlus plugin;
     private final TerrenoManager manager;
     private final MarcoManager marcos;
+    private final VisitorFlyListener visitorFlyListener;
 
-    public TerrenosGUIListener(TerrenosPlus plugin, TerrenoManager manager, MarcoManager marcos) {
+    public TerrenosGUIListener(TerrenosPlus plugin, TerrenoManager manager, MarcoManager marcos,
+                               VisitorFlyListener visitorFlyListener) {
         this.plugin = plugin;
         this.manager = manager;
         this.marcos = marcos;
+        this.visitorFlyListener = visitorFlyListener;
     }
 
     @EventHandler
@@ -74,6 +78,20 @@ public final class TerrenosGUIListener implements Listener {
 
             if (slot == TerrenosGUI.SLOT_BACK) {
                 player.openInventory(TerrenosGUI.main(player, manager));
+                return;
+            }
+
+            if (slot == TerrenosGUI.SLOT_VISITOR_FLY) {
+                boolean enabled = !terrain.visitorFlyEnabled();
+                if (!manager.setVisitorFlyEnabled(terrain, enabled)) {
+                    plugin.send(player, "messages.visitor-fly-toggle-failed");
+                    return;
+                }
+
+                visitorFlyListener.refreshTerrain(terrain);
+                plugin.send(player,
+                        enabled ? "messages.visitor-fly-enabled" : "messages.visitor-fly-disabled");
+                player.openInventory(TerrenosGUI.manage(player, terrain, marcos, plugin));
                 return;
             }
 
