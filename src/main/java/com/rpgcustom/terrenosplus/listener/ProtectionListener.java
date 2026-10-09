@@ -79,13 +79,19 @@ public final class ProtectionListener implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onEntityExplosion(EntityExplodeEvent event) {
         if (!plugin.getConfig().getBoolean("protection.explosions", true)) return;
-        event.blockList().removeIf(block -> manager.find(block.getLocation()).isPresent());
+        event.blockList().removeIf(block ->
+                manager.find(block.getLocation())
+                        .map(terrain -> !terrain.explosionsEnabled())
+                        .orElse(false));
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onBlockExplosion(BlockExplodeEvent event) {
         if (!plugin.getConfig().getBoolean("protection.explosions", true)) return;
-        event.blockList().removeIf(block -> manager.find(block.getLocation()).isPresent());
+        event.blockList().removeIf(block ->
+                manager.find(block.getLocation())
+                        .map(terrain -> !terrain.explosionsEnabled())
+                        .orElse(false));
     }
 
     @EventHandler(ignoreCancelled = true)
