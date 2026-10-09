@@ -31,6 +31,7 @@ public final class TrackingStickListener implements Listener {
     private final Map<UUID, MarkerState> activeMarkers = new ConcurrentHashMap<>();
     private final Map<UUID, UUID> trackedTerrains = new ConcurrentHashMap<>();
     private final Map<UUID, Long> markerExpiry = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> messageCooldownUntil = new ConcurrentHashMap<>();
 
     public TrackingStickListener(TerrenosPlus plugin, TerrenoManager manager) {
         this.plugin = plugin;
@@ -138,6 +139,7 @@ public final class TrackingStickListener implements Listener {
         markerExpiry.remove(uuid);
         trackedTerrains.remove(uuid);
         activeMarkers.remove(uuid);
+        messageCooldownUntil.remove(uuid);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -153,13 +155,13 @@ public final class TrackingStickListener implements Listener {
         if (terrain.isEmpty()) {
             trackedTerrains.remove(player.getUniqueId());
             restoreCornerMarkers(player);
-            plugin.send(player, "messages.tracker-unprotected");
+            sendTrackerMessage(player, "messages.tracker-unprotected");
             return;
         }
 
         Terreno t = terrain.get();
         trackedTerrains.put(player.getUniqueId(), t.id());
-        plugin.send(player, "messages.tracker-info",
+        sendTrackerMessage(player, "messages.tracker-info",
                 "{owner}", t.ownerName(),
                 "{area}", String.valueOf(t.area()),
                 "{width}", String.valueOf(t.width()),
@@ -211,6 +213,16 @@ public final class TrackingStickListener implements Listener {
             if (location.getWorld() == null) continue;
             player.sendBlockChange(location, location.getBlock().getBlockData());
         }
+    }
+
+    private void sendTrackerMessage(Player player, String path, String... replacements) {
+        UUID playerId = player.getUniqueId();
+        long now = System.currentTimeMillis();
+        long allowedAt = messageCooldownUntil.getOrDefault(playerId, 0L);
+        if (now < allowedAt) return;
+
+        messageCooldownUntil.put(playerId, now + 2_000L);
+        plugin.send(player, path, replacements);
     }
 
     private boolean isTrackingStick(ItemStack item) {
