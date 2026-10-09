@@ -42,7 +42,7 @@ public final class DailyRewardsGUI {
 
             if (completed) {
                 material = Material.LIME_CONCRETE;
-                name = "&a&lDIA " + (day + 1) + " ✓";
+                name = "&a&lDIA " + (day + 1) + " ✔";
                 lore.add("&aRecompensa coletada");
                 lore.add("");
                 lore.add("&7+" + reward + " Marcos");
