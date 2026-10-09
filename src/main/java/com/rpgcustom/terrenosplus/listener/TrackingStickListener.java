@@ -32,6 +32,8 @@ public final class TrackingStickListener implements Listener {
     private final Map<UUID, UUID> trackedTerrains = new ConcurrentHashMap<>();
     private final Map<UUID, Long> markerExpiry = new ConcurrentHashMap<>();
     private final Map<UUID, Long> messageCooldownUntil = new ConcurrentHashMap<>();
+    private final Map<UUID, CreationVisualLock> creationVisualLocks = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> trackerPauseUntil = new ConcurrentHashMap<>();
 
     public TrackingStickListener(TerrenosPlus plugin, TerrenoManager manager) {
         this.plugin = plugin;
@@ -50,6 +52,23 @@ public final class TrackingStickListener implements Listener {
     private void showHeldTrackerBoundaries() {
         for (Player player : plugin.getServer().getOnlinePlayers()) {
             UUID playerId = player.getUniqueId();
+
+            CreationVisualLock visualLock = creationVisualLocks.get(playerId);
+            if (visualLock != null) {
+                if (visualLock.expiresAt() > System.currentTimeMillis()) {
+                    // Durante os 5 segundos de confirmação da criação, o tracker
+                    // não pode sobrescrever as esmeraldas com blocos de ouro.
+                    continue;
+                }
+                creationVisualLocks.remove(playerId, visualLock);
+            }
+
+            long pausedUntil = trackerPauseUntil.getOrDefault(playerId, 0L);
+            if (pausedUntil > System.currentTimeMillis()) {
+                continue;
+            }
+            trackerPauseUntil.remove(playerId);
+
             if (!isHoldingTrackingStick(player)) {
                 long expiresAt = markerExpiry.getOrDefault(playerId, 0L);
                 if (expiresAt == 0L && trackedTerrains.containsKey(playerId)) {
@@ -61,7 +80,7 @@ public final class TrackingStickListener implements Listener {
                     UUID trackedId = trackedTerrains.get(playerId);
                     if (trackedId != null) {
                         manager.getById(trackedId).ifPresent(terrain -> {
-                            showBoundary(player, terrain);
+                            showBoundary(player, terrain, Color.YELLOW);
                             showCornerMarkers(player, terrain);
                         });
                     }
@@ -98,7 +117,7 @@ public final class TrackingStickListener implements Listener {
             }
 
             Terreno current = terrain.get();
-            showBoundary(player, current);
+            showBoundary(player, current, Color.YELLOW);
             showCornerMarkers(player, current);
         }
     }
@@ -140,6 +159,56 @@ public final class TrackingStickListener implements Listener {
         trackedTerrains.remove(uuid);
         activeMarkers.remove(uuid);
         messageCooldownUntil.remove(uuid);
+        creationVisualLocks.remove(uuid);
+        trackerPauseUntil.remove(uuid);
+    }
+
+    public void protectCreationPreview(Player player, Terreno terrain, long durationMillis) {
+        if (player == null || terrain == null) return;
+        creationVisualLocks.put(
+                player.getUniqueId(),
+                new CreationVisualLock(terrain.id(), System.currentTimeMillis() + Math.max(0L, durationMillis))
+        );
+
+        UUID tracked = trackedTerrains.get(player.getUniqueId());
+        if (terrain.id().equals(tracked)) {
+            restoreCornerMarkers(player);
+        }
+    }
+
+    public void onTerrainRemoved(Player remover, Terreno terrain) {
+        if (terrain == null) return;
+
+        for (Player online : plugin.getServer().getOnlinePlayers()) {
+            UUID playerId = online.getUniqueId();
+            UUID tracked = trackedTerrains.get(playerId);
+            MarkerState state = activeMarkers.get(playerId);
+
+            if (terrain.id().equals(tracked)
+                    || (state != null && terrain.id().equals(state.terrainId()))) {
+                trackedTerrains.remove(playerId);
+                markerExpiry.remove(playerId);
+                creationVisualLocks.remove(playerId);
+                restoreCornerMarkers(online);
+            }
+        }
+
+        if (remover != null && remover.isOnline()) {
+            trackerPauseUntil.put(remover.getUniqueId(), System.currentTimeMillis() + 1500L);
+            flashRemovedBoundary(remover, terrain);
+        }
+    }
+
+    private void flashRemovedBoundary(Player player, Terreno terrain) {
+        for (int pulse = 0; pulse < 3; pulse++) {
+            plugin.getServer().getScheduler().runTaskLater(
+                    plugin,
+                    () -> {
+                        if (player.isOnline()) showBoundary(player, terrain, Color.RED);
+                    },
+                    pulse * 8L
+            );
+        }
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -168,7 +237,7 @@ public final class TrackingStickListener implements Listener {
                 "{depth}", String.valueOf(t.depth()));
 
         if (t.ownerId().equals(player.getUniqueId()) || player.hasPermission("terrenosplus.admin")) {
-            showBoundary(player, t);
+            showBoundary(player, t, Color.YELLOW);
             showCornerMarkers(player, t);
         }
     }
@@ -232,7 +301,7 @@ public final class TrackingStickListener implements Listener {
         return "inspect".equals(type);
     }
 
-    private void showBoundary(Player player, Terreno terrain) {
+    private void showBoundary(Player player, Terreno terrain, Color color) {
         var world = plugin.getServer().getWorld(terrain.world());
         if (world == null) return;
 
@@ -245,13 +314,13 @@ public final class TrackingStickListener implements Listener {
 
         // Cada lado liga diretamente um bloco de ouro ao outro. Se um canto estiver
         // mais alto ou mais baixo, o Y é interpolado e a linha acompanha a diagonal.
-        showEdge(player, minMin, maxMin, step);
-        showEdge(player, minMax, maxMax, step);
-        showEdge(player, minMin, minMax, step);
-        showEdge(player, maxMin, maxMax, step);
+        showEdge(player, minMin, maxMin, step, color);
+        showEdge(player, minMax, maxMax, step, color);
+        showEdge(player, minMin, minMax, step, color);
+        showEdge(player, maxMin, maxMax, step, color);
     }
 
-    private void showEdge(Player player, Location from, Location to, int step) {
+    private void showEdge(Player player, Location from, Location to, int step, Color color) {
         double dx = to.getX() - from.getX();
         double dz = to.getZ() - from.getZ();
         double horizontalDistance = Math.max(Math.abs(dx), Math.abs(dz));
@@ -262,21 +331,24 @@ public final class TrackingStickListener implements Listener {
             double x = from.getX() + (dx * progress) + 0.5;
             double y = from.getY() + ((to.getY() - from.getY()) * progress) + 1.10;
             double z = from.getZ() + (dz * progress) + 0.5;
-            particle(player, new Location(from.getWorld(), x, y, z));
+            particle(player, new Location(from.getWorld(), x, y, z), color);
         }
     }
 
-    private void particle(Player player, Location location) {
+    private void particle(Player player, Location location, Color color) {
         player.spawnParticle(
                 Particle.DUST,
                 location,
                 2,
                 0.05, 0.05, 0.05,
                 0.0,
-                new Particle.DustOptions(Color.YELLOW, 1.15f)
+                new Particle.DustOptions(color, 1.15f)
         );
     }
 
     private record MarkerState(UUID terrainId, List<Location> locations) {
+    }
+
+    private record CreationVisualLock(UUID terrainId, long expiresAt) {
     }
 }
