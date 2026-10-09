@@ -84,15 +84,14 @@ public final class ClaimToolListener implements Listener {
                 plugin.send(player, "messages.created", "{area}", String.valueOf(terreno.area()));
                 showCreatedSubtitle(player);
 
-                // Durante os primeiros 5 segundos, os dois pontos escolhidos
-                // permanecem em esmeralda e o contorno usa partículas verdes.
+                // Assim que o segundo ponto é escolhido, os quatro cantos do
+                // terreno ficam visíveis em esmeralda durante a confirmação.
                 for (int i = 0; i < 10; i++) {
                     plugin.getServer().getScheduler().runTaskLater(
                             plugin,
                             () -> {
                                 if (!player.isOnline()) return;
-                                showSelectionCorner(player, first);
-                                showSelectionCorner(player, location);
+                                showSelectionCorners(player, terreno);
                                 showGreenBoundary(player, terreno);
                             },
                             i * 10L
@@ -104,6 +103,7 @@ public final class ClaimToolListener implements Listener {
 
                     restoreVirtualBlock(player, first, firstOriginal);
                     restoreVirtualBlock(player, location, secondOriginal);
+                    restoreTerrainCorners(player, terreno);
 
                     showGoldClaimMarkers(player, terreno);
                     showYellowBoundary(player, terreno);
@@ -227,6 +227,12 @@ public final class ClaimToolListener implements Listener {
         player.sendBlockChange(location, Material.EMERALD_BLOCK.createBlockData());
         Location center = location.clone().add(0.5, 2.1, 0.5);
         player.spawnParticle(Particle.HAPPY_VILLAGER, center, 20, 0.35, 0.25, 0.35, 0.0);
+    }
+
+    private void showSelectionCorners(Player player, Terreno terreno) {
+        for (Location corner : terrainCorners(terreno)) {
+            showSelectionCorner(player, corner);
+        }
     }
 
     private void restoreVirtualBlock(Player player, Location location, BlockData original) {
