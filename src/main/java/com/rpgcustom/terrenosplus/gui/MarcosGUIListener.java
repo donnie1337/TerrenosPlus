@@ -50,7 +50,7 @@ public final class MarcosGUIListener implements Listener {
 
             int current = marcos.getDailyCycleIndex(player.getUniqueId());
             if (day != current || !marcos.canClaimDaily(player.getUniqueId())) {
-                player.sendMessage(color("&c&lᴍᴀʀᴄᴏs &8• &fEsta recompensa ainda não está disponível."));
+                player.sendMessage(color("&6[Marcos] &r&fEsta recompensa ainda não está disponível."));
                 return;
             }
 
