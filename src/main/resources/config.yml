@@ -14,7 +14,8 @@ claims:
 
   expansion:
     # Cada novo bloco de área custa esta quantidade de Marcos.
-    # O comando /terreno expandir <marcos> <direção> usa <marcos> como orçamento.
+    # O comando usa /terreno expandir <direção> <quantidade>.
+    # A quantidade representa blocos de área; até completar 10x10, não desconta Marcos.
     marcos-per-block: 1
 
   # Limite de terrenos por cargo do CargoPlus.
@@ -80,10 +81,11 @@ messages:
   no-claim: "&7Este local não possui dono."
   command-own-claim-only: "&cVocê precisa estar dentro de um terreno seu para usar este comando."
   info-owner: "&7Dono: &f{owner} &8| &7Área: &f{area} Blocos &8| &7Tamanho: &f{width}x{depth} &8| &7Data de criação: &f{created} &8| &7ID: &f{id}"
-  expanded: "&aTerreno expandido em &f{amount} blocos &apara &f{direction}&a. Novo tamanho: &f{width}x{depth} &8| &7Custo: &e{cost} Marcos &8| &7Saldo: &e{balance} Marcos"
-  expand-usage: "&eUse: &f/terreno expandir <marcos> <norte|sul|leste|oeste>&e. Exemplo: &f/terreno expandir 10 leste"
-  expand-invalid: "&cInforme uma quantidade válida de Marcos para usar na expansão."
+  expanded: "&aTerreno expandido em &f{amount} faixa(s) &apara &f{direction}&a, adicionando &f{blocks} blocos&a. Novo tamanho: &f{width}x{depth} &8| &7Custo: &e{cost} Marcos &8| &7Saldo: &e{balance} Marcos"
+  expand-usage: "&eUse: &f/terreno expandir <norte|sul|leste|oeste> <quantidade>&e. Exemplo: &f/terreno expandir sul 40"
+  expand-invalid: "&cInforme uma quantidade válida de blocos para a expansão."
   expand-direction-invalid: "&cDireção inválida. Use norte, sul, leste ou oeste."
+  expand-layer-too-small: "&cEssa borda precisa de pelo menos &e{required} blocos &cpara formar uma faixa completa."
   expand-no-marcos: "&cVocê precisa de &e{cost} Marcos &cpara esta expansão. Saldo atual: &e{balance} Marcos&c."
   expand-overlap: "&cNão é possível expandir: a nova área encostaria no terreno de &f{owner}&c."
   expand-too-large: "&cA expansão ultrapassaria o limite máximo de &f{max} blocos &cde área."
