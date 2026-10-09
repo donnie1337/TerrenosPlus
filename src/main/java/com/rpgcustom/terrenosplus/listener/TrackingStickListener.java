@@ -41,7 +41,7 @@ public final class TrackingStickListener implements Listener {
                 plugin,
                 this::showHeldTrackerBoundaries,
                 1L,
-                10L
+                5L
         );
     }
 
@@ -74,15 +74,13 @@ public final class TrackingStickListener implements Listener {
 
             markerExpiry.remove(playerId);
 
-            UUID trackedId = trackedTerrains.get(player.getUniqueId());
+            UUID trackedId = trackedTerrains.get(playerId);
             if (trackedId == null) {
-                manager.find(player.getLocation()).ifPresent(terrain -> {
-                    if (terrain.ownerId().equals(player.getUniqueId())
-                            || player.hasPermission("terrenosplus.admin")) {
-                        trackedTerrains.put(player.getUniqueId(), terrain.id());
-                    }
-                });
-                trackedId = trackedTerrains.get(player.getUniqueId());
+                Terreno automatic = findAutomaticTerrain(player);
+                if (automatic != null) {
+                    trackedTerrains.put(playerId, automatic.id());
+                    trackedId = automatic.id();
+                }
             }
 
             if (trackedId == null) {
@@ -101,6 +99,31 @@ public final class TrackingStickListener implements Listener {
             showBoundary(player, current);
             showCornerMarkers(player, current);
         }
+    }
+
+    private Terreno findAutomaticTerrain(Player player) {
+        String worldName = player.getWorld().getName();
+        Location playerLocation = player.getLocation();
+
+        Terreno nearest = null;
+        double nearestDistanceSquared = Double.MAX_VALUE;
+
+        for (Terreno terrain : manager.getByOwner(player.getUniqueId())) {
+            if (!terrain.world().equals(worldName)) continue;
+
+            double centerX = (terrain.minX() + terrain.maxX()) / 2.0;
+            double centerZ = (terrain.minZ() + terrain.maxZ()) / 2.0;
+            double dx = playerLocation.getX() - centerX;
+            double dz = playerLocation.getZ() - centerZ;
+            double distanceSquared = dx * dx + dz * dz;
+
+            if (distanceSquared < nearestDistanceSquared) {
+                nearestDistanceSquared = distanceSquared;
+                nearest = terrain;
+            }
+        }
+
+        return nearest;
     }
 
     private boolean isHoldingTrackingStick(Player player) {
