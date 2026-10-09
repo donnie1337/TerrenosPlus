@@ -2,6 +2,9 @@ claims:
   # Apenas nestes mundos jogadores podem criar terrenos.
   enabled-worlds:
     - world
+    - world_nether
+    - world_the_end
+    - mining
 
   minimum-width: 5
   minimum-area: 25
