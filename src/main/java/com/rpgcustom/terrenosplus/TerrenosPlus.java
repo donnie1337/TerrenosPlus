@@ -1,11 +1,14 @@
 package com.rpgcustom.terrenosplus;
 
 import com.rpgcustom.terrenosplus.api.TerrenosApi;
+import com.rpgcustom.terrenosplus.command.MarcosCommand;
 import com.rpgcustom.terrenosplus.command.TerrenoCommand;
 import com.rpgcustom.terrenosplus.listener.ClaimToolListener;
 import com.rpgcustom.terrenosplus.listener.ProtectionListener;
 import com.rpgcustom.terrenosplus.listener.TrackingStickListener;
+import com.rpgcustom.terrenosplus.gui.MarcosGUIListener;
 import com.rpgcustom.terrenosplus.gui.TerrenosGUIListener;
+import com.rpgcustom.terrenosplus.service.MarcoManager;
 import com.rpgcustom.terrenosplus.service.TerrenoManager;
 import org.bukkit.ChatColor;
 import org.bukkit.command.PluginCommand;
@@ -16,6 +19,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public final class TerrenosPlus extends JavaPlugin {
 
     private TerrenoManager terrenoManager;
+    private MarcoManager marcoManager;
 
     @Override
     public void onEnable() {
@@ -25,6 +29,10 @@ public final class TerrenosPlus extends JavaPlugin {
 
         terrenoManager = new TerrenoManager(this);
         terrenoManager.load();
+
+        marcoManager = new MarcoManager(this);
+        marcoManager.load();
+        marcoManager.start();
 
         getServer().getServicesManager().register(
                 TerrenosApi.class,
@@ -40,11 +48,18 @@ public final class TerrenosPlus extends JavaPlugin {
         getServer().getPluginManager().registerEvents(
                 new TrackingStickListener(this, terrenoManager), this);
         getServer().getPluginManager().registerEvents(
-                new TerrenosGUIListener(this, terrenoManager), this);
+                new TerrenosGUIListener(this, terrenoManager, marcoManager), this);
+        getServer().getPluginManager().registerEvents(
+                new MarcosGUIListener(marcoManager), this);
 
         PluginCommand command = getCommand("terreno");
         if (command != null) {
             command.setExecutor(new TerrenoCommand(this, terrenoManager));
+        }
+
+        PluginCommand marcosCommand = getCommand("marcos");
+        if (marcosCommand != null) {
+            marcosCommand.setExecutor(new MarcosCommand(marcoManager));
         }
 
         getLogger().info("TerrenosPlus ativado com " + terrenoManager.all().size() + " terreno(s).");
@@ -52,6 +67,10 @@ public final class TerrenosPlus extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (marcoManager != null) {
+            marcoManager.stop();
+            marcoManager.save();
+        }
         if (terrenoManager != null) {
             terrenoManager.save();
         }
@@ -60,6 +79,10 @@ public final class TerrenosPlus extends JavaPlugin {
 
     public TerrenoManager getTerrenoManager() {
         return terrenoManager;
+    }
+
+    public MarcoManager getMarcoManager() {
+        return marcoManager;
     }
 
     public void send(Player player, String path, String... replacements) {
