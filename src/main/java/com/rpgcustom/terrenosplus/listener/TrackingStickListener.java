@@ -272,9 +272,17 @@ public final class TrackingStickListener implements Listener {
                 groundCorner(world, terrain.maxX(), terrain.maxZ())
         );
 
-        MarkerState previous = activeMarkers.get(player.getUniqueId());
-        if (previous != null && !previous.terrainId().equals(terrain.id())) {
-            restoreCornerMarkers(player);
+        UUID playerId = player.getUniqueId();
+        MarkerState previous = activeMarkers.get(playerId);
+        if (previous != null) {
+            // Ao expandir o mesmo terreno, os cantos antigos deixam de ser borda.
+            // Restaura apenas os marcadores que não pertencem mais aos novos cantos,
+            // evitando blocos de ouro "fantasmas" dentro da área expandida.
+            for (Location previousCorner : previous.locations()) {
+                if (!corners.contains(previousCorner) && previousCorner.getWorld() != null) {
+                    player.sendBlockChange(previousCorner, previousCorner.getBlock().getBlockData());
+                }
+            }
         }
 
         var gold = Material.GOLD_BLOCK.createBlockData();
@@ -282,7 +290,7 @@ public final class TrackingStickListener implements Listener {
             player.sendBlockChange(corner, gold);
         }
 
-        activeMarkers.put(player.getUniqueId(), new MarkerState(terrain.id(), corners));
+        activeMarkers.put(playerId, new MarkerState(terrain.id(), corners));
     }
 
     private Location groundCorner(org.bukkit.World world, int x, int z) {
