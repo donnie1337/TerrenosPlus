@@ -30,6 +30,8 @@ messages:
   overlap: "&cEsse terreno se sobrepõe ao terreno de &f{owner}&c."
   claim-limit: "&cVocê já atingiu o limite de &f{max}&c terrenos."
   created: "&aTerreno criado com &f{area}&a blocos."
+  created-subtitle: "&aTerreno criado com sucesso!"
+  configure-after-create: "&fAgora você pode utilizar o &e/terreno &fpara configurar seu terreno."
   protected: "&cEste terreno pertence a &f{owner}&c."
   tracker-unprotected: "&7Este bloco não está protegido por nenhum terreno."
   tracker-info: "&7Dono: &f{owner} &8| &7Área: &f{area} blocos &8| &7Tamanho: &f{width}x{depth}"
