@@ -21,6 +21,7 @@ public final class TerrenosPlus extends JavaPlugin {
 
     private TerrenoManager terrenoManager;
     private MarcoManager marcoManager;
+    private TrackingStickListener trackingStickListener;
 
     @Override
     public void onEnable() {
@@ -42,12 +43,13 @@ public final class TerrenosPlus extends JavaPlugin {
                 ServicePriority.Highest
         );
 
+        trackingStickListener = new TrackingStickListener(this, terrenoManager);
         getServer().getPluginManager().registerEvents(
-                new ClaimToolListener(this, terrenoManager), this);
+                new ClaimToolListener(this, terrenoManager, trackingStickListener), this);
         getServer().getPluginManager().registerEvents(
                 new ProtectionListener(this, terrenoManager), this);
         getServer().getPluginManager().registerEvents(
-                new TrackingStickListener(this, terrenoManager), this);
+                trackingStickListener, this);
         getServer().getPluginManager().registerEvents(
                 new TerrainEnterListener(terrenoManager), this);
         getServer().getPluginManager().registerEvents(
@@ -57,7 +59,7 @@ public final class TerrenosPlus extends JavaPlugin {
 
         PluginCommand command = getCommand("terreno");
         if (command != null) {
-            command.setExecutor(new TerrenoCommand(this, terrenoManager));
+            command.setExecutor(new TerrenoCommand(this, terrenoManager, trackingStickListener));
         }
 
         PluginCommand marcosCommand = getCommand("marcos");
@@ -86,6 +88,10 @@ public final class TerrenosPlus extends JavaPlugin {
 
     public MarcoManager getMarcoManager() {
         return marcoManager;
+    }
+
+    public TrackingStickListener getTrackingStickListener() {
+        return trackingStickListener;
     }
 
     public void sendMarcos(Player player, String path, String... replacements) {
