@@ -176,6 +176,19 @@ public final class TrackingStickListener implements Listener {
         }
     }
 
+    public void showExpandedTerrain(Player player, Terreno terrain) {
+        if (player == null || terrain == null || !player.isOnline()) return;
+
+        UUID playerId = player.getUniqueId();
+        trackedTerrains.put(playerId, terrain.id());
+        markerExpiry.put(playerId, System.currentTimeMillis() + 15_000L);
+
+        // Redesenha imediatamente os marcadores de ouro nos novos quatro cantos
+        // e o contorno amarelo usando o tamanho atualizado do terreno.
+        showCornerMarkers(player, terrain);
+        showBoundary(player, terrain, Color.YELLOW);
+    }
+
     public void onTerrainRemoved(Player remover, Terreno terrain) {
         if (terrain == null) return;
 
