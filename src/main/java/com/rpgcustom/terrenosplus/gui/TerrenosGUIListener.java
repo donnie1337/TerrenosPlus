@@ -43,14 +43,14 @@ public final class TerrenosGUIListener implements Listener {
             if (slot == TerrenosGUI.SLOT_MANAGE) {
                 Optional<Terreno> current = manager.find(player.getLocation());
                 if (current.isEmpty() || !current.get().ownerId().equals(player.getUniqueId())) {
-                    player.sendMessage(color("&c&lᴛᴇʀʀᴇɴᴏs &8• &fFique dentro de um terreno seu para gerenciá-lo."));
+                    player.sendMessage(color("&a[Terrenos] &r&cFique dentro de um terreno seu para gerenciá-lo."));
                     return;
                 }
 
                 Terreno t = current.get();
-                player.sendMessage(color("&b&lᴛᴇʀʀᴇɴᴏs &8• &fTerreno atual: &e"
+                player.sendMessage(color("&a[Terrenos] &r&fTerreno atual: &e"
                         + t.width() + "x" + t.depth() + " &8(" + t.area() + " blocos&8)&f."));
-                player.sendMessage(color("&7As permissões individuais serão exibidas aqui quando forem configuradas."));
+                player.sendMessage(color("&a[Terrenos] &r&7As permissões individuais serão exibidas aqui quando forem configuradas."));
                 return;
             }
 
