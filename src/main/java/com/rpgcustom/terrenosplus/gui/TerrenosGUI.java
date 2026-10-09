@@ -23,7 +23,7 @@ public final class TerrenosGUI {
 
     public static Inventory main(Player player, TerrenoManager manager) {
         TerrenosGUIHolder holder = new TerrenosGUIHolder(TerrenosGUIHolder.View.MAIN, 0);
-        Inventory inventory = Bukkit.createInventory(holder, 36, "Terrenos");
+        Inventory inventory = Bukkit.createInventory(holder, 27, "Terrenos");
         holder.setInventory(inventory);
 
         List<Terreno> own = manager.getByOwner(player.getUniqueId());
