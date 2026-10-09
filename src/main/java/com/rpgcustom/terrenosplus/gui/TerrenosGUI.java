@@ -21,6 +21,7 @@ public final class TerrenosGUI {
     public static final int SLOT_MARCOS = 15;
 
     public static final int SLOT_EXPAND = 11;
+    public static final int SLOT_VISITOR_FLY = 13;
     public static final int SLOT_EXPLOSIONS = 15;
     public static final int SLOT_BACK = 22;
 
@@ -109,6 +110,24 @@ public final class TerrenosGUI {
                         "&7Seu saldo: &e" + balance + " Marcos",
                         "",
                         "&aClique para ver a instrução no chat"
+                )
+        ));
+
+        boolean visitorFly = terrain.visitorFlyEnabled();
+        inventory.setItem(SLOT_VISITOR_FLY, item(
+                visitorFly ? Material.FEATHER : Material.CHAIN,
+                "&b&lFLY DE VISITANTES",
+                List.of(
+                        "",
+                        "&fControla o fly de outros jogadores",
+                        "&fque possuem permissão para voar.",
+                        "",
+                        "&7Dono do terreno: &asempre permitido",
+                        "&7Staffs: &asempre permitidos",
+                        "",
+                        "&7Estado: " + (visitorFly ? "&aATIVADO" : "&cDESATIVADO"),
+                        "",
+                        "&eClique para " + (visitorFly ? "desativar" : "ativar")
                 )
         ));
 
