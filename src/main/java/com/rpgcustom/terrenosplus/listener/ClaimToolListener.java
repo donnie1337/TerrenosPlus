@@ -131,6 +131,12 @@ public final class ClaimToolListener implements Listener {
                 plugin.send(player, "messages.too-small",
                         "{min}", String.valueOf(result.value()));
             }
+            case INITIAL_TOO_LARGE -> {
+                restoreVirtualBlock(player, first, firstOriginal);
+                restoreVirtualBlock(player, location, secondOriginal);
+                plugin.send(player, "messages.initial-too-large",
+                        "{max}", String.valueOf(result.value()));
+            }
             case TOO_LARGE -> {
                 restoreVirtualBlock(player, first, firstOriginal);
                 restoreVirtualBlock(player, location, secondOriginal);
