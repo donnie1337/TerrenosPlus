@@ -242,16 +242,38 @@ public final class TerrenoCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
 
+            int starterMax = Math.max(1,
+                    plugin.getConfig().getInt("claims.initial-maximum-width", 10));
+            int currentDimension = switch (direction) {
+                case EAST, WEST -> current.width();
+                case NORTH, SOUTH -> current.depth();
+            };
+            int freeLayers = Math.max(0, starterMax - currentDimension);
+
+            // O comando continua usando <marcos> como orçamento equivalente.
+            // Porém, enquanto a dimensão ainda não chegou ao tamanho inicial
+            // máximo (10 por padrão), as camadas correspondentes são gratuitas.
+            int expansionAmount;
             if (requestedMarcos < costPerLayer) {
-                plugin.send(player, "messages.expand-no-marcos",
-                        "{cost}", String.valueOf(costPerLayer),
-                        "{balance}", String.valueOf(marcoManager.getBalance(player.getUniqueId())));
+                if (freeLayers <= 0) {
+                    plugin.send(player, "messages.expand-no-marcos",
+                            "{cost}", String.valueOf(costPerLayer),
+                            "{balance}", String.valueOf(marcoManager.getBalance(player.getUniqueId())));
+                    return true;
+                }
+                expansionAmount = 1;
+            } else {
+                expansionAmount = (int) Math.min(Integer.MAX_VALUE, requestedMarcos / costPerLayer);
+            }
+
+            if (expansionAmount <= 0) {
+                plugin.send(player, "messages.expand-invalid");
                 return true;
             }
 
-            int expansionAmount = (int) Math.min(Integer.MAX_VALUE, requestedMarcos / costPerLayer);
-            long rawCost = (long) expansionAmount * costPerLayer;
-            if (expansionAmount <= 0 || rawCost > Integer.MAX_VALUE) {
+            int paidLayers = Math.max(0, expansionAmount - freeLayers);
+            long rawCost = (long) paidLayers * costPerLayer;
+            if (rawCost > Integer.MAX_VALUE) {
                 plugin.send(player, "messages.expand-invalid");
                 return true;
             }
@@ -268,7 +290,7 @@ public final class TerrenoCommand implements CommandExecutor, TabCompleter {
 
             switch (result.type()) {
                 case SUCCESS -> {
-                    if (!marcoManager.take(player.getUniqueId(), cost)) {
+                    if (cost > 0 && !marcoManager.take(player.getUniqueId(), cost)) {
                         plugin.getLogger().warning("Falha ao debitar Marcos após expansão de " + player.getName());
                     }
                     Terreno expanded = result.terreno();
