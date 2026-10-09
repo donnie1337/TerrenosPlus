@@ -134,6 +134,8 @@ public final class TerrenosGUIListener implements Listener {
                 player.sendMessage(Component.empty());
                 player.sendMessage(
                         Component.text("[Terrenos]").color(NamedTextColor.GREEN)
+                                .append(Component.text(" Expansão de terreno")
+                                        .color(NamedTextColor.WHITE))
                 );
                 player.sendMessage(Component.empty());
                 player.sendMessage(
@@ -155,6 +157,7 @@ public final class TerrenosGUIListener implements Listener {
                                 .append(Component.text(" para voltar ao menu.")
                                         .color(NamedTextColor.GRAY))
                 );
+                player.sendMessage(Component.empty());
                 return;
             }
 
