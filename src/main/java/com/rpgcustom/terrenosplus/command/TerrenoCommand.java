@@ -5,7 +5,9 @@ import com.rpgcustom.terrenosplus.model.Terreno;
 import com.rpgcustom.terrenosplus.gui.TerrenosGUI;
 import com.rpgcustom.terrenosplus.gui.TerrenosListGUI;
 import com.rpgcustom.terrenosplus.listener.TrackingStickListener;
+import com.rpgcustom.terrenosplus.service.MarcoManager;
 import com.rpgcustom.terrenosplus.service.TerrenoManager;
+import org.bukkit.block.BlockFace;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -24,12 +26,15 @@ public final class TerrenoCommand implements CommandExecutor {
     private final TerrenosPlus plugin;
     private final TerrenoManager manager;
     private final TrackingStickListener trackingStickListener;
+    private final MarcoManager marcoManager;
 
     public TerrenoCommand(TerrenosPlus plugin, TerrenoManager manager,
-                          TrackingStickListener trackingStickListener) {
+                          TrackingStickListener trackingStickListener,
+                          MarcoManager marcoManager) {
         this.plugin = plugin;
         this.manager = manager;
         this.trackingStickListener = trackingStickListener;
+        this.marcoManager = marcoManager;
     }
 
     @Override
@@ -92,6 +97,80 @@ public final class TerrenoCommand implements CommandExecutor {
             return true;
         }
 
+        if (args[0].equalsIgnoreCase("expandir")) {
+            Optional<Terreno> terreno = manager.find(player.getLocation());
+            if (terreno.isEmpty()) {
+                plugin.send(player, "messages.no-claim");
+                return true;
+            }
+
+            Terreno current = terreno.get();
+            if (!current.ownerId().equals(player.getUniqueId())) {
+                plugin.send(player, "messages.not-owner");
+                return true;
+            }
+
+            if (args.length < 2) {
+                plugin.send(player, "messages.expand-usage");
+                return true;
+            }
+
+            int amount;
+            try {
+                amount = Integer.parseInt(args[1]);
+            } catch (NumberFormatException exception) {
+                plugin.send(player, "messages.expand-invalid");
+                return true;
+            }
+
+            if (amount <= 0) {
+                plugin.send(player, "messages.expand-invalid");
+                return true;
+            }
+
+            int costPerBlock = Math.max(1, plugin.getConfig().getInt("claims.expansion.marcos-per-block", 1));
+            long rawCost = (long) amount * costPerBlock;
+            if (rawCost > Integer.MAX_VALUE) {
+                plugin.send(player, "messages.expand-invalid");
+                return true;
+            }
+            int cost = (int) rawCost;
+
+            if (marcoManager.getBalance(player.getUniqueId()) < cost) {
+                plugin.send(player, "messages.expand-no-marcos",
+                        "{cost}", String.valueOf(cost),
+                        "{balance}", String.valueOf(marcoManager.getBalance(player.getUniqueId())));
+                return true;
+            }
+
+            TerrenoManager.Direction direction = facingDirection(player.getFacing());
+            TerrenoManager.ExpandResult result = manager.expand(current, player, direction, amount);
+
+            switch (result.type()) {
+                case SUCCESS -> {
+                    if (!marcoManager.take(player.getUniqueId(), cost)) {
+                        plugin.getLogger().warning("Falha ao debitar Marcos após expansão de " + player.getName());
+                    }
+                    Terreno expanded = result.terreno();
+                    trackingStickListener.showExpandedTerrain(player, expanded);
+                    plugin.send(player, "messages.expanded",
+                            "{amount}", String.valueOf(amount),
+                            "{direction}", directionName(direction),
+                            "{cost}", String.valueOf(cost),
+                            "{width}", String.valueOf(expanded.width()),
+                            "{depth}", String.valueOf(expanded.depth()),
+                            "{balance}", String.valueOf(marcoManager.getBalance(player.getUniqueId())));
+                }
+                case OVERLAP -> plugin.send(player, "messages.expand-overlap",
+                        "{owner}", result.overlap().ownerName());
+                case TOO_LARGE -> plugin.send(player, "messages.expand-too-large",
+                        "{max}", String.valueOf(result.value()));
+                case NOT_OWNER -> plugin.send(player, "messages.not-owner");
+                case INVALID -> plugin.send(player, "messages.expand-invalid");
+            }
+            return true;
+        }
+
         if (args[0].equalsIgnoreCase("listar")) {
             player.openInventory(TerrenosListGUI.build(player, manager, 0));
             return true;
@@ -100,6 +179,33 @@ public final class TerrenoCommand implements CommandExecutor {
         player.sendMessage("§e/terreno info §7- mostra o dono do local");
         player.sendMessage("§e/terreno remover §7- remove seu terreno atual");
         player.sendMessage("§e/terreno listar §7- lista seus terrenos");
+        player.sendMessage("§e/terreno expandir <quantidade> §7- expande na direção que você está olhando");
         return true;
+    }
+
+    private TerrenoManager.Direction facingDirection(BlockFace facing) {
+        return switch (facing) {
+            case NORTH, NORTH_NORTH_EAST, NORTH_NORTH_WEST -> TerrenoManager.Direction.NORTH;
+            case SOUTH, SOUTH_SOUTH_EAST, SOUTH_SOUTH_WEST -> TerrenoManager.Direction.SOUTH;
+            case EAST, EAST_NORTH_EAST, EAST_SOUTH_EAST -> TerrenoManager.Direction.EAST;
+            case WEST, WEST_NORTH_WEST, WEST_SOUTH_WEST -> TerrenoManager.Direction.WEST;
+            default -> {
+                int x = facing.getModX();
+                int z = facing.getModZ();
+                if (Math.abs(x) >= Math.abs(z)) {
+                    yield x >= 0 ? TerrenoManager.Direction.EAST : TerrenoManager.Direction.WEST;
+                }
+                yield z >= 0 ? TerrenoManager.Direction.SOUTH : TerrenoManager.Direction.NORTH;
+            }
+        };
+    }
+
+    private String directionName(TerrenoManager.Direction direction) {
+        return switch (direction) {
+            case NORTH -> "Norte";
+            case SOUTH -> "Sul";
+            case EAST -> "Leste";
+            case WEST -> "Oeste";
+        };
     }
 }
