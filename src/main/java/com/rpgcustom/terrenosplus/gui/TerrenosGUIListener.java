@@ -130,7 +130,7 @@ public final class TerrenosGUIListener implements Listener {
                                 .append(suggestion)
                 );
                 player.sendMessage(
-                        Component.text("Depois escolha a quantidade de Marcos e a direção: norte, sul, leste ou oeste.")
+                        Component.text("Depois escolha a direção e a quantidade. Ex.: /terreno expandir sul 40")
                                 .color(NamedTextColor.GRAY)
                 );
                 return;
