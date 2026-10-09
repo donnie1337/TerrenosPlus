@@ -127,9 +127,14 @@ public final class TerrenoManager implements TerrenosApi {
         );
 
         int minWidth = Math.max(1, plugin.getConfig().getInt("claims.minimum-width", 5));
+        int initialMaxWidth = Math.max(minWidth, plugin.getConfig().getInt("claims.initial-maximum-width", 10));
         long minArea = Math.max(1L, plugin.getConfig().getLong("claims.minimum-area", 25L));
         if (candidate.width() < minWidth || candidate.depth() < minWidth || candidate.area() < minArea) {
             return CreateResult.tooSmall(minWidth);
+        }
+
+        if (candidate.width() > initialMaxWidth || candidate.depth() > initialMaxWidth) {
+            return CreateResult.initialTooLarge(initialMaxWidth);
         }
 
         long maxArea = Math.max(minArea,
@@ -147,6 +152,46 @@ public final class TerrenoManager implements TerrenosApi {
         index(candidate);
         save();
         return CreateResult.success(candidate);
+    }
+
+    public ExpandResult expand(Terreno terrain, Player player, Direction direction, int amount) {
+        if (terrain == null || player == null || direction == null || amount <= 0) {
+            return ExpandResult.invalid();
+        }
+        if (!terrain.ownerId().equals(player.getUniqueId()) && !player.hasPermission("terrenosplus.admin")) {
+            return ExpandResult.notOwner();
+        }
+
+        int minX = terrain.minX();
+        int minZ = terrain.minZ();
+        int maxX = terrain.maxX();
+        int maxZ = terrain.maxZ();
+
+        switch (direction) {
+            case NORTH -> minZ -= amount;
+            case SOUTH -> maxZ += amount;
+            case WEST -> minX -= amount;
+            case EAST -> maxX += amount;
+        }
+
+        Terreno expanded = terrain.resized(minX, minZ, maxX, maxZ);
+
+        long maxArea = Math.max(1L,
+                plugin.getConfig().getLong("claims.maximum-area-per-claim", 10000L));
+        if (expanded.area() > maxArea) {
+            return ExpandResult.tooLarge(maxArea);
+        }
+
+        Terreno overlap = findOverlapIgnoring(expanded, terrain.id());
+        if (overlap != null) {
+            return ExpandResult.overlap(overlap);
+        }
+
+        unindex(terrain);
+        terrenos.put(expanded.id(), expanded);
+        index(expanded);
+        save();
+        return ExpandResult.success(expanded);
     }
 
     private int resolveMaxClaims(Player player) {
@@ -255,6 +300,10 @@ public final class TerrenoManager implements TerrenosApi {
     }
 
     private Terreno findOverlap(Terreno candidate) {
+        return findOverlapIgnoring(candidate, null);
+    }
+
+    private Terreno findOverlapIgnoring(Terreno candidate, UUID ignoredId) {
         int minChunkX = candidate.minX() >> 4;
         int maxChunkX = candidate.maxX() >> 4;
         int minChunkZ = candidate.minZ() >> 4;
@@ -269,6 +318,7 @@ public final class TerrenoManager implements TerrenosApi {
                 if (ids == null) continue;
                 for (UUID id : ids) {
                     if (!checked.add(id)) continue;
+                    if (ignoredId != null && ignoredId.equals(id)) continue;
                     Terreno existing = terrenos.get(id);
                     if (existing != null && candidate.overlaps(existing)) return existing;
                 }
@@ -320,12 +370,25 @@ public final class TerrenoManager implements TerrenosApi {
         void accept(int chunkX, int chunkZ);
     }
 
+    public enum Direction { NORTH, SOUTH, EAST, WEST }
+
+    public record ExpandResult(ExpandType type, Terreno terreno, Terreno overlap, long value) {
+        public enum ExpandType { SUCCESS, INVALID, NOT_OWNER, TOO_LARGE, OVERLAP }
+
+        static ExpandResult success(Terreno t) { return new ExpandResult(ExpandType.SUCCESS, t, null, 0); }
+        static ExpandResult invalid() { return new ExpandResult(ExpandType.INVALID, null, null, 0); }
+        static ExpandResult notOwner() { return new ExpandResult(ExpandType.NOT_OWNER, null, null, 0); }
+        static ExpandResult tooLarge(long max) { return new ExpandResult(ExpandType.TOO_LARGE, null, null, max); }
+        static ExpandResult overlap(Terreno t) { return new ExpandResult(ExpandType.OVERLAP, null, t, 0); }
+    }
+
     public record CreateResult(Type type, Terreno terreno, Terreno overlap, long value) {
-        public enum Type { SUCCESS, DIFFERENT_WORLD, TOO_SMALL, TOO_LARGE, OVERLAP, LIMIT }
+        public enum Type { SUCCESS, DIFFERENT_WORLD, TOO_SMALL, INITIAL_TOO_LARGE, TOO_LARGE, OVERLAP, LIMIT }
 
         static CreateResult success(Terreno t) { return new CreateResult(Type.SUCCESS, t, null, 0); }
         static CreateResult differentWorld() { return new CreateResult(Type.DIFFERENT_WORLD, null, null, 0); }
         static CreateResult tooSmall(long min) { return new CreateResult(Type.TOO_SMALL, null, null, min); }
+        static CreateResult initialTooLarge(long max) { return new CreateResult(Type.INITIAL_TOO_LARGE, null, null, max); }
         static CreateResult tooLarge(long max) { return new CreateResult(Type.TOO_LARGE, null, null, max); }
         static CreateResult overlap(Terreno t) { return new CreateResult(Type.OVERLAP, null, t, 0); }
         static CreateResult limit(long max) { return new CreateResult(Type.LIMIT, null, null, max); }
