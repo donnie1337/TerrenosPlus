@@ -7,6 +7,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -14,6 +15,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -22,6 +24,7 @@ public final class ClaimToolListener implements Listener {
     private final TerrenosPlus plugin;
     private final TerrenoManager manager;
     private final Map<UUID, Location> firstCorners = new HashMap<>();
+    private final Map<UUID, BlockData> firstCornerOriginal = new HashMap<>();
 
     public ClaimToolListener(TerrenosPlus plugin, TerrenoManager manager) {
         this.plugin = plugin;
@@ -45,17 +48,25 @@ public final class ClaimToolListener implements Listener {
             return;
         }
 
-        Location first = firstCorners.remove(player.getUniqueId());
+        UUID playerId = player.getUniqueId();
+        Location first = firstCorners.remove(playerId);
         if (first == null) {
-            firstCorners.put(player.getUniqueId(), location);
+            firstCorners.put(playerId, location);
+            firstCornerOriginal.put(playerId, clicked.getBlockData().clone());
             plugin.send(player, "messages.first-corner",
                     "{x}", String.valueOf(location.getBlockX()),
                     "{z}", String.valueOf(location.getBlockZ()));
-            showCorner(player, location);
+            showSelectionCorner(player, location);
             return;
         }
 
+        BlockData firstOriginal = firstCornerOriginal.remove(playerId);
+        BlockData secondOriginal = clicked.getBlockData().clone();
+        showSelectionCorner(player, location);
+
         if (!first.getWorld().equals(location.getWorld())) {
+            restoreVirtualBlock(player, first, firstOriginal);
+            restoreVirtualBlock(player, location, secondOriginal);
             plugin.send(player, "messages.different-world");
             return;
         }
@@ -65,17 +76,56 @@ public final class ClaimToolListener implements Listener {
             case SUCCESS -> {
                 Terreno terreno = result.terreno();
                 plugin.send(player, "messages.created", "{area}", String.valueOf(terreno.area()));
-                showBoundary(player, terreno);
+
+                // Durante os primeiros 5 segundos, os dois pontos escolhidos
+                // permanecem em esmeralda e o contorno usa partículas verdes.
+                showGreenBoundary(player, terreno);
+
+                plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                    if (!player.isOnline()) return;
+
+                    restoreVirtualBlock(player, first, firstOriginal);
+                    restoreVirtualBlock(player, location, secondOriginal);
+
+                    showGoldClaimMarkers(player, terreno);
+                    showYellowBoundary(player, terreno);
+
+                    // Depois de mais 15 segundos, restaura os blocos reais.
+                    plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                        if (!player.isOnline()) return;
+                        restoreTerrainCorners(player, terreno);
+                    }, 15L * 20L);
+                }, 5L * 20L);
             }
-            case DIFFERENT_WORLD -> plugin.send(player, "messages.different-world");
-            case TOO_SMALL -> plugin.send(player, "messages.too-small",
-                    "{min}", String.valueOf(result.value()));
-            case TOO_LARGE -> plugin.send(player, "messages.too-large",
-                    "{max}", String.valueOf(result.value()));
-            case OVERLAP -> plugin.send(player, "messages.overlap",
-                    "{owner}", result.overlap().ownerName());
-            case LIMIT -> plugin.send(player, "messages.claim-limit",
-                    "{max}", String.valueOf(result.value()));
+            case DIFFERENT_WORLD -> {
+                restoreVirtualBlock(player, first, firstOriginal);
+                restoreVirtualBlock(player, location, secondOriginal);
+                plugin.send(player, "messages.different-world");
+            }
+            case TOO_SMALL -> {
+                restoreVirtualBlock(player, first, firstOriginal);
+                restoreVirtualBlock(player, location, secondOriginal);
+                plugin.send(player, "messages.too-small",
+                        "{min}", String.valueOf(result.value()));
+            }
+            case TOO_LARGE -> {
+                restoreVirtualBlock(player, first, firstOriginal);
+                restoreVirtualBlock(player, location, secondOriginal);
+                plugin.send(player, "messages.too-large",
+                        "{max}", String.valueOf(result.value()));
+            }
+            case OVERLAP -> {
+                restoreVirtualBlock(player, first, firstOriginal);
+                restoreVirtualBlock(player, location, secondOriginal);
+                plugin.send(player, "messages.overlap",
+                        "{owner}", result.overlap().ownerName());
+            }
+            case LIMIT -> {
+                restoreVirtualBlock(player, first, firstOriginal);
+                restoreVirtualBlock(player, location, secondOriginal);
+                plugin.send(player, "messages.claim-limit",
+                        "{max}", String.valueOf(result.value()));
+            }
         }
     }
 
@@ -88,12 +138,65 @@ public final class ClaimToolListener implements Listener {
         return plugin.getConfig().getStringList("claims.enabled-worlds").contains(worldName);
     }
 
-    private void showCorner(Player player, Location location) {
+    private void showSelectionCorner(Player player, Location location) {
+        player.sendBlockChange(location, Material.EMERALD_BLOCK.createBlockData());
         Location center = location.clone().add(0.5, 1.1, 0.5);
         player.spawnParticle(Particle.HAPPY_VILLAGER, center, 20, 0.35, 0.25, 0.35, 0.0);
     }
 
-    private void showBoundary(Player player, Terreno terreno) {
+    private void restoreVirtualBlock(Player player, Location location, BlockData original) {
+        if (location == null || location.getWorld() == null) return;
+        BlockData data = original != null ? original : location.getBlock().getBlockData();
+        player.sendBlockChange(location, data);
+    }
+
+    private void showGreenBoundary(Player player, Terreno terreno) {
+        showBoundary(player, terreno, Particle.HAPPY_VILLAGER);
+    }
+
+    private void showYellowBoundary(Player player, Terreno terreno) {
+        // Redesenha por alguns segundos para que o efeito amarelo permaneça visível.
+        for (int i = 0; i < 15; i++) {
+            plugin.getServer().getScheduler().runTaskLater(
+                    plugin,
+                    () -> {
+                        if (player.isOnline()) showBoundary(player, terreno, Particle.WAX_ON);
+                    },
+                    i * 20L
+            );
+        }
+    }
+
+    private void showGoldClaimMarkers(Player player, Terreno terreno) {
+        for (Location corner : terrainCorners(terreno)) {
+            player.sendBlockChange(corner, Material.GOLD_BLOCK.createBlockData());
+        }
+    }
+
+    private void restoreTerrainCorners(Player player, Terreno terreno) {
+        for (Location corner : terrainCorners(terreno)) {
+            player.sendBlockChange(corner, corner.getBlock().getBlockData());
+        }
+    }
+
+    private List<Location> terrainCorners(Terreno terreno) {
+        var world = plugin.getServer().getWorld(terreno.world());
+        if (world == null) return List.of();
+
+        return List.of(
+                groundCorner(world, terreno.minX(), terreno.minZ()),
+                groundCorner(world, terreno.minX(), terreno.maxZ()),
+                groundCorner(world, terreno.maxX(), terreno.minZ()),
+                groundCorner(world, terreno.maxX(), terreno.maxZ())
+        );
+    }
+
+    private Location groundCorner(org.bukkit.World world, int x, int z) {
+        int y = world.getHighestBlockYAt(x, z);
+        return new Location(world, x, y, z);
+    }
+
+    private void showBoundary(Player player, Terreno terreno, Particle particleType) {
         var world = plugin.getServer().getWorld(terreno.world());
         if (world == null) return;
 
@@ -101,19 +204,19 @@ public final class ClaimToolListener implements Listener {
         int step = Math.max(1, Math.min(4, Math.max(terreno.width(), terreno.depth()) / 20));
 
         for (int x = terreno.minX(); x <= terreno.maxX(); x += step) {
-            particle(player, world.getName(), x, y, terreno.minZ());
-            particle(player, world.getName(), x, y, terreno.maxZ());
+            particle(player, world.getName(), x, y, terreno.minZ(), particleType);
+            particle(player, world.getName(), x, y, terreno.maxZ(), particleType);
         }
         for (int z = terreno.minZ(); z <= terreno.maxZ(); z += step) {
-            particle(player, world.getName(), terreno.minX(), y, z);
-            particle(player, world.getName(), terreno.maxX(), y, z);
+            particle(player, world.getName(), terreno.minX(), y, z, particleType);
+            particle(player, world.getName(), terreno.maxX(), y, z, particleType);
         }
     }
 
-    private void particle(Player player, String worldName, int x, int y, int z) {
+    private void particle(Player player, String worldName, int x, int y, int z, Particle particleType) {
         var world = plugin.getServer().getWorld(worldName);
         if (world == null) return;
-        player.spawnParticle(Particle.HAPPY_VILLAGER,
+        player.spawnParticle(particleType,
                 new Location(world, x + 0.5, y, z + 0.5),
                 2, 0.05, 0.05, 0.05, 0.0);
     }
