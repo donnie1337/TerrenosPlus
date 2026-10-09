@@ -9,10 +9,17 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
 public final class MarcosGUIListener implements Listener {
+
+    private static final long MESSAGE_COOLDOWN_MS = 2000L;
 
     private final MarcoManager marcos;
     private final TerrenoManager terrenos;
+    private final Map<UUID, Long> unavailableMessageCooldown = new ConcurrentHashMap<>();
 
     public MarcosGUIListener(MarcoManager marcos, TerrenoManager terrenos) {
         this.marcos = marcos;
@@ -50,7 +57,12 @@ public final class MarcosGUIListener implements Listener {
 
             int current = marcos.getDailyCycleIndex(player.getUniqueId());
             if (day != current || !marcos.canClaimDaily(player.getUniqueId())) {
-                player.sendMessage(color("&6[Marcos] &r&fEsta recompensa ainda não está disponível."));
+                long now = System.currentTimeMillis();
+                long last = unavailableMessageCooldown.getOrDefault(player.getUniqueId(), 0L);
+                if (now - last >= MESSAGE_COOLDOWN_MS) {
+                    unavailableMessageCooldown.put(player.getUniqueId(), now);
+                    player.sendMessage(color("&6[Marcos] &r&fEsta recompensa ainda não está disponível."));
+                }
                 return;
             }
 
