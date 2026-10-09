@@ -2,6 +2,7 @@ package com.rpgcustom.terrenosplus.gui;
 
 import com.rpgcustom.terrenosplus.TerrenosPlus;
 import com.rpgcustom.terrenosplus.model.Terreno;
+import com.rpgcustom.terrenosplus.service.MarcoManager;
 import com.rpgcustom.terrenosplus.service.TerrenoManager;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -16,10 +17,12 @@ public final class TerrenosGUIListener implements Listener {
 
     private final TerrenosPlus plugin;
     private final TerrenoManager manager;
+    private final MarcoManager marcos;
 
-    public TerrenosGUIListener(TerrenosPlus plugin, TerrenoManager manager) {
+    public TerrenosGUIListener(TerrenosPlus plugin, TerrenoManager manager, MarcoManager marcos) {
         this.plugin = plugin;
         this.manager = manager;
+        this.marcos = marcos;
     }
 
     @EventHandler
@@ -52,7 +55,7 @@ public final class TerrenosGUIListener implements Listener {
             }
 
             if (slot == TerrenosGUI.SLOT_MARCOS) {
-                player.sendMessage(color("&b&lᴍᴀʀᴄᴏs &8• &fVocê ganha Marcos por tempo jogado, missões e recompensas diárias."));
+                player.openInventory(MarcosGUI.main(player, marcos));
             }
             return;
         }
