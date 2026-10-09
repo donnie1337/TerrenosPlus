@@ -25,6 +25,33 @@ public final class TrackingStickListener implements Listener {
     public TrackingStickListener(TerrenosPlus plugin, TerrenoManager manager) {
         this.plugin = plugin;
         this.manager = manager;
+
+        // Enquanto o jogador estiver segurando o palito, redesenha os limites
+        // periodicamente. Ao trocar/largar o item, nenhum novo efeito é enviado.
+        plugin.getServer().getScheduler().runTaskTimer(
+                plugin,
+                this::showHeldTrackerBoundaries,
+                1L,
+                10L
+        );
+    }
+
+    private void showHeldTrackerBoundaries() {
+        for (Player player : plugin.getServer().getOnlinePlayers()) {
+            if (!isHoldingTrackingStick(player)) continue;
+
+            manager.find(player.getLocation()).ifPresent(terrain -> {
+                if (terrain.ownerId().equals(player.getUniqueId())
+                        || player.hasPermission("terrenosplus.admin")) {
+                    showBoundary(player, terrain);
+                }
+            });
+        }
+    }
+
+    private boolean isHoldingTrackingStick(Player player) {
+        return isTrackingStick(player.getInventory().getItemInMainHand())
+                || isTrackingStick(player.getInventory().getItemInOffHand());
     }
 
     @EventHandler(ignoreCancelled = true)
