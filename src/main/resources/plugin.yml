@@ -11,6 +11,10 @@ commands:
     description: Gerencia seus terrenos.
     usage: /terreno <info|remover|listar>
     aliases: [terrenos, claim]
+  marcos:
+    description: Abre o menu de Marcos.
+    usage: /marcos
+    aliases: [marco]
 
 permissions:
   terrenosplus.use:
