@@ -10,14 +10,20 @@ import com.rpgcustom.terrenosplus.service.TerrenoManager;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 
-public final class TerrenoCommand implements CommandExecutor {
+public final class TerrenoCommand implements CommandExecutor, TabCompleter {
 
     private static final DateTimeFormatter CREATION_DATE_FORMAT =
             DateTimeFormatter.ofPattern("dd/MM/yyyy").withZone(ZoneId.systemDefault());
@@ -234,9 +240,58 @@ public final class TerrenoCommand implements CommandExecutor {
         return true;
     }
 
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (!(sender instanceof Player player)) return List.of();
+
+        if (args.length == 1) {
+            return filterSuggestions(args[0], List.of("info", "remover", "listar", "explosao", "expandir"));
+        }
+
+        if (!args[0].equalsIgnoreCase("expandir")) return List.of();
+
+        if (args.length == 2) {
+            Optional<Terreno> terrain = manager.find(player.getLocation());
+            if (terrain.isEmpty() || !terrain.get().ownerId().equals(player.getUniqueId())) {
+                return List.of();
+            }
+
+            Terreno t = terrain.get();
+            int costPerBlock = Math.max(1, plugin.getConfig().getInt("claims.expansion.marcos-per-block", 1));
+            long northSouth = (long) t.width() * costPerBlock;
+            long eastWest = (long) t.depth() * costPerBlock;
+
+            Set<String> values = new LinkedHashSet<>();
+            addAmountSuggestion(values, northSouth);
+            addAmountSuggestion(values, eastWest);
+            addAmountSuggestion(values, northSouth * 2L);
+            addAmountSuggestion(values, eastWest * 2L);
+            return filterSuggestions(args[1], new ArrayList<>(values));
+        }
+
+        if (args.length == 3) {
+            return filterSuggestions(args[2], List.of("norte", "sul", "leste", "oeste"));
+        }
+
+        return List.of();
+    }
+
+    private void addAmountSuggestion(Set<String> values, long amount) {
+        if (amount > 0L && amount <= Integer.MAX_VALUE) {
+            values.add(String.valueOf(amount));
+        }
+    }
+
+    private List<String> filterSuggestions(String input, List<String> values) {
+        String prefix = input == null ? "" : input.toLowerCase(Locale.ROOT);
+        return values.stream()
+                .filter(value -> value.toLowerCase(Locale.ROOT).startsWith(prefix))
+                .toList();
+    }
+
     private TerrenoManager.Direction parseDirection(String value) {
         if (value == null) return null;
-        return switch (value.toLowerCase(java.util.Locale.ROOT)) {
+        return switch (value.toLowerCase(Locale.ROOT)) {
             case "norte", "north", "n" -> TerrenoManager.Direction.NORTH;
             case "sul", "south", "s" -> TerrenoManager.Direction.SOUTH;
             case "leste", "east", "e" -> TerrenoManager.Direction.EAST;
