@@ -9,7 +9,7 @@ softdepend: [CargoPlus]
 commands:
   terreno:
     description: Gerencia seus terrenos.
-    usage: /terreno <info|remover|listar|expandir <quantidade>>
+    usage: /terreno <info|remover|listar|trust <nickname>|untrust <nickname>|explosao|expandir <marcos> <direcao>>
     aliases: [terrenos, claim]
   marcos:
     description: Abre o menu de Marcos.
