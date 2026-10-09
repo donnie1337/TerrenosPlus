@@ -51,7 +51,7 @@ public final class TrackingStickListener implements Listener {
             if (!isHoldingTrackingStick(player)) {
                 long expiresAt = markerExpiry.getOrDefault(playerId, 0L);
                 if (expiresAt == 0L && trackedTerrains.containsKey(playerId)) {
-                    markerExpiry.put(playerId, System.currentTimeMillis() + 15_000L);
+                    markerExpiry.put(playerId, System.currentTimeMillis() + 30_000L);
                     expiresAt = markerExpiry.get(playerId);
                 }
 
