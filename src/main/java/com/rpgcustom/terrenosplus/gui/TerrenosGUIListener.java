@@ -81,6 +81,11 @@ public final class TerrenosGUIListener implements Listener {
                 return;
             }
 
+            if (slot == TerrenosGUI.SLOT_TRUSTED) {
+                player.openInventory(TerrenosGUI.trustedPlayers(terrain));
+                return;
+            }
+
             if (slot == TerrenosGUI.SLOT_VISITOR_FLY) {
                 boolean enabled = !terrain.visitorFlyEnabled();
                 if (!manager.setVisitorFlyEnabled(terrain, enabled)) {
@@ -131,6 +136,20 @@ public final class TerrenosGUIListener implements Listener {
                 return;
             }
 
+            return;
+        }
+
+        if (holder.view() == TerrenosGUIHolder.View.TRUSTED) {
+            Optional<Terreno> current = manager.find(player.getLocation());
+            if (current.isEmpty() || !current.get().ownerId().equals(player.getUniqueId())) {
+                player.closeInventory();
+                player.sendMessage(color("&a[Terrenos] &r&cFique dentro de um terreno seu para gerenciá-lo."));
+                return;
+            }
+
+            if (slot == TerrenosGUI.SLOT_TRUSTED_BACK) {
+                player.openInventory(TerrenosGUI.manage(player, current.get(), marcos, plugin));
+            }
             return;
         }
 
