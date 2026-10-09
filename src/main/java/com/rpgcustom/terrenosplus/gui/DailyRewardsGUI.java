@@ -11,16 +11,17 @@ import java.util.List;
 
 public final class DailyRewardsGUI {
 
-    public static final int[] DAY_SLOTS = {10, 11, 12, 13, 14, 15, 16};
-    public static final int SLOT_PROFILE = 22;
-    public static final int SLOT_BACK = 26;
+    // Caminho em zigue-zague, inspirado em uma trilha de progresso.
+    public static final int[] DAY_SLOTS = {10, 20, 30, 40, 32, 24, 16};
+    public static final int SLOT_BACK = 45;
+    public static final int SLOT_PROFILE = 49;
 
     private DailyRewardsGUI() {
     }
 
     public static Inventory build(Player player, MarcoManager marcos) {
-        TerrenosGUIHolder holder = new TerrenosGUIHolder(TerrenosGUIHolder.View.DAILY, 0);
-        Inventory inventory = Bukkit.createInventory(holder, 27, "Recompensas Diárias");
+        MarcosGUIHolder holder = new MarcosGUIHolder(MarcosGUIHolder.View.DAILY);
+        Inventory inventory = Bukkit.createInventory(holder, 54, "Recompensas Diárias");
         holder.setInventory(inventory);
 
         int currentIndex = marcos.getDailyCycleIndex(player.getUniqueId());
@@ -39,21 +40,23 @@ public final class DailyRewardsGUI {
             lore.add("");
 
             if (completed) {
-                material = Material.LIME_STAINED_GLASS_PANE;
-                name = "&a&lDIA " + (day + 1) + " ✓";
+                material = Material.LIME_CONCRETE;
+                name = "&a&lᴅɪᴀ " + (day + 1) + " ✓";
                 lore.add("&aRecompensa coletada");
+                lore.add("");
+                lore.add("&7+" + reward + " Marcos");
             } else if (today) {
                 material = Material.SUNFLOWER;
-                name = "&e&lDIA " + (day + 1);
-                lore.add("&fRecompensa de hoje");
+                name = "&e&lᴅɪᴀ " + (day + 1);
+                lore.add("&fRecompensa disponível");
                 lore.add("");
                 lore.add("&e+" + reward + " Marcos");
                 lore.add("");
                 lore.add("&aClique para coletar");
             } else {
-                material = Material.GRAY_STAINED_GLASS_PANE;
-                name = "&7&lDIA " + (day + 1);
-                lore.add("&7Disponível futuramente");
+                material = day == 6 ? Material.GOLD_BLOCK : Material.GRAY_CONCRETE;
+                name = day == 6 ? "&6&lᴅɪᴀ 7" : "&7&lᴅɪᴀ " + (day + 1);
+                lore.add("&7Complete os dias anteriores");
                 lore.add("");
                 lore.add("&8+" + reward + " Marcos");
             }
@@ -61,28 +64,23 @@ public final class DailyRewardsGUI {
             inventory.setItem(DAY_SLOTS[day], TerrenosGUI.item(material, name, lore));
         }
 
-        long seconds = marcos.getSecondsUntilHourlyReward(player.getUniqueId());
-        long minutes = (seconds + 59L) / 60L;
-
-        inventory.setItem(SLOT_PROFILE, TerrenosGUI.item(
-                Material.PLAYER_HEAD,
-                "&b&lSEUS MARCOS",
-                List.of(
-                        "",
-                        "&fSaldo: &e" + marcos.getBalance(player.getUniqueId()) + " Marcos",
-                        "",
-                        "&7Próxima recompensa por tempo:",
-                        "&faprox. &e" + minutes + " minuto(s)",
-                        "",
-                        "&8A recompensa horária pode ser",
-                        "&825, 50 ou 75 Marcos."
-                )
-        ));
-
         inventory.setItem(SLOT_BACK, TerrenosGUI.item(
                 Material.ARROW,
                 "&cVoltar",
-                List.of("", "&7Clique para voltar ao menu de terrenos.")
+                List.of("", "&7Clique para voltar ao menu de Marcos.")
+        ));
+
+        inventory.setItem(SLOT_PROFILE, TerrenosGUI.item(
+                Material.PLAYER_HEAD,
+                "&b&lᴍᴀʀᴄᴏs",
+                List.of(
+                        "",
+                        "&fSaldo atual: &e" + marcos.getBalance(player.getUniqueId()) + " Marcos",
+                        "",
+                        claimedToday
+                                ? "&7Você já coletou a recompensa de hoje."
+                                : "&aVocê possui uma recompensa disponível."
+                )
         ));
 
         return inventory;
