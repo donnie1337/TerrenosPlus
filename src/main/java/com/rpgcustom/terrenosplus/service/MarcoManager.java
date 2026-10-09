@@ -117,12 +117,7 @@ public final class MarcoManager {
 
             while (seconds >= HOURLY_SECONDS) {
                 seconds -= HOURLY_SECONDS;
-                int reward = HOURLY_REWARDS[ThreadLocalRandom.current().nextInt(HOURLY_REWARDS.length)];
-                add(uuid, reward);
-                plugin.sendMarcos(player, "messages.marcos-hourly-reward",
-                        "{amount}", String.valueOf(reward),
-                        "{balance}", String.valueOf(getBalance(uuid)));
-                showHourlyRewardTitle(player, reward);
+                grantHourlyReward(player);
             }
 
             playedSeconds.put(uuid, seconds);
@@ -130,6 +125,23 @@ public final class MarcoManager {
         }
 
         if (changed) save();
+    }
+
+    private int grantHourlyReward(Player player) {
+        int reward = HOURLY_REWARDS[ThreadLocalRandom.current().nextInt(HOURLY_REWARDS.length)];
+        add(player.getUniqueId(), reward);
+        plugin.sendMarcos(player, "messages.marcos-hourly-reward",
+                "{amount}", String.valueOf(reward),
+                "{balance}", String.valueOf(getBalance(player.getUniqueId())));
+        showHourlyRewardTitle(player, reward);
+        return reward;
+    }
+
+    public int forceHourlyReward(Player player) {
+        if (player == null || !player.isOnline()) return 0;
+        int reward = grantHourlyReward(player);
+        save();
+        return reward;
     }
 
     private void showHourlyRewardTitle(Player player, int reward) {
