@@ -130,7 +130,7 @@ public final class TerrenosGUIListener implements Listener {
                                 .append(suggestion)
                 );
                 player.sendMessage(
-                        Component.text("Depois escolha a direção e a quantidade. Ex.: /terreno expandir sul 40")
+                        Component.text("Use só a quantidade para expandir para onde olha, ou informe a direção. Ex.: /terreno expandir 40")
                                 .color(NamedTextColor.GRAY)
                 );
                 return;
