@@ -203,20 +203,29 @@ public final class TerrenoCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
 
-            if (args.length < 3) {
+            if (args.length < 2) {
                 plugin.send(player, "messages.expand-usage");
                 return true;
             }
 
-            TerrenoManager.Direction direction = parseDirection(args[1]);
-            if (direction == null) {
-                plugin.send(player, "messages.expand-direction-invalid");
-                return true;
+            TerrenoManager.Direction direction;
+            String amountArgument;
+
+            if (args.length == 2) {
+                direction = facingDirection(player);
+                amountArgument = args[1];
+            } else {
+                direction = parseDirection(args[1]);
+                if (direction == null) {
+                    plugin.send(player, "messages.expand-direction-invalid");
+                    return true;
+                }
+                amountArgument = args[2];
             }
 
             int requestedBlocks;
             try {
-                requestedBlocks = Integer.parseInt(args[2]);
+                requestedBlocks = Integer.parseInt(amountArgument);
             } catch (NumberFormatException exception) {
                 plugin.send(player, "messages.expand-invalid");
                 return true;
@@ -316,7 +325,8 @@ public final class TerrenoCommand implements CommandExecutor, TabCompleter {
         player.sendMessage("§e/terreno untrust <nickname> §7- remove o acesso do jogador");
         player.sendMessage("§e/terreno explosao §7- ativa ou desativa explosões no terreno");
         player.sendMessage("§e/terreno listar §7- lista seus terrenos");
-        player.sendMessage("§e/terreno expandir <norte|sul|leste|oeste> <quantidade> §7- expande o terreno");
+        player.sendMessage("§e/terreno expandir <quantidade> §7- expande para onde você está olhando");
+        player.sendMessage("§e/terreno expandir <norte|sul|leste|oeste> <quantidade> §7- expande para um lado específico");
         return true;
     }
 
@@ -358,44 +368,66 @@ public final class TerrenoCommand implements CommandExecutor, TabCompleter {
 
         if (!args[0].equalsIgnoreCase("expandir")) return List.of();
 
+        Optional<Terreno> terrain = manager.find(player.getLocation());
+        if (terrain.isEmpty() || !terrain.get().ownerId().equals(player.getUniqueId())) {
+            return List.of();
+        }
+
+        Terreno t = terrain.get();
+
         if (args.length == 2) {
-            return filterSuggestions(args[1], List.of("norte", "sul", "leste", "oeste"));
+            List<String> suggestions = new ArrayList<>(List.of("norte", "sul", "leste", "oeste"));
+            suggestions.addAll(expansionAmountSuggestions(t, facingDirection(player)));
+            return filterSuggestions(args[1], suggestions);
         }
 
         if (args.length == 3) {
-            Optional<Terreno> terrain = manager.find(player.getLocation());
-            if (terrain.isEmpty() || !terrain.get().ownerId().equals(player.getUniqueId())) {
-                return List.of();
-            }
-
-            Terreno t = terrain.get();
             TerrenoManager.Direction direction = parseDirection(args[1]);
             if (direction == null) return List.of();
-
-            long borderLength = switch (direction) {
-                case EAST, WEST -> t.depth();
-                case NORTH, SOUTH -> t.width();
-            };
-
-            int starterMax = Math.max(1,
-                    plugin.getConfig().getInt("claims.initial-maximum-width", 10));
-            int currentDimension = switch (direction) {
-                case EAST, WEST -> t.width();
-                case NORTH, SOUTH -> t.depth();
-            };
-            int freeLayers = Math.max(0, starterMax - currentDimension);
-
-            Set<String> values = new LinkedHashSet<>();
-            addAmountSuggestion(values, borderLength);
-            addAmountSuggestion(values, borderLength * 2L);
-            if (freeLayers > 0) {
-                addAmountSuggestion(values, borderLength * freeLayers);
-            }
-            addAmountSuggestion(values, borderLength * Math.max(1L, freeLayers + 1L));
-            return filterSuggestions(args[2], new ArrayList<>(values));
+            return filterSuggestions(args[2], expansionAmountSuggestions(t, direction));
         }
 
         return List.of();
+    }
+
+    private List<String> expansionAmountSuggestions(Terreno terrain, TerrenoManager.Direction direction) {
+        long borderLength = switch (direction) {
+            case EAST, WEST -> terrain.depth();
+            case NORTH, SOUTH -> terrain.width();
+        };
+
+        int starterMax = Math.max(1,
+                plugin.getConfig().getInt("claims.initial-maximum-width", 10));
+        int currentDimension = switch (direction) {
+            case EAST, WEST -> terrain.width();
+            case NORTH, SOUTH -> terrain.depth();
+        };
+        int freeLayers = Math.max(0, starterMax - currentDimension);
+
+        Set<String> values = new LinkedHashSet<>();
+        addAmountSuggestion(values, borderLength);
+        addAmountSuggestion(values, borderLength * 2L);
+        if (freeLayers > 0) {
+            addAmountSuggestion(values, borderLength * freeLayers);
+        }
+        addAmountSuggestion(values, borderLength * Math.max(1L, freeLayers + 1L));
+        return new ArrayList<>(values);
+    }
+
+    private TerrenoManager.Direction facingDirection(Player player) {
+        float yaw = player.getLocation().getYaw();
+        float normalized = (yaw % 360.0F + 360.0F) % 360.0F;
+
+        if (normalized >= 315.0F || normalized < 45.0F) {
+            return TerrenoManager.Direction.SOUTH;
+        }
+        if (normalized < 135.0F) {
+            return TerrenoManager.Direction.WEST;
+        }
+        if (normalized < 225.0F) {
+            return TerrenoManager.Direction.NORTH;
+        }
+        return TerrenoManager.Direction.EAST;
     }
 
     private void addAmountSuggestion(Set<String> values, long amount) {
