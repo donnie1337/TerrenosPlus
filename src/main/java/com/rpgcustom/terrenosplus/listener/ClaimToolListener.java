@@ -25,13 +25,16 @@ public final class ClaimToolListener implements Listener {
 
     private final TerrenosPlus plugin;
     private final TerrenoManager manager;
+    private final TrackingStickListener trackingStickListener;
     private final Map<UUID, Location> firstCorners = new HashMap<>();
     private final Map<UUID, BlockData> firstCornerOriginal = new HashMap<>();
     private final Map<UUID, org.bukkit.scheduler.BukkitTask> selectionTasks = new HashMap<>();
 
-    public ClaimToolListener(TerrenosPlus plugin, TerrenoManager manager) {
+    public ClaimToolListener(TerrenosPlus plugin, TerrenoManager manager,
+                             TrackingStickListener trackingStickListener) {
         this.plugin = plugin;
         this.manager = manager;
+        this.trackingStickListener = trackingStickListener;
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -81,6 +84,7 @@ public final class ClaimToolListener implements Listener {
             case SUCCESS -> {
                 Terreno terreno = result.terreno();
                 placeCenterCraftingTable(terreno);
+                trackingStickListener.protectCreationPreview(player, terreno, 5_000L);
                 plugin.send(player, "messages.created", "{area}", String.valueOf(terreno.area()));
                 showCreatedSubtitle(player);
 
