@@ -53,7 +53,7 @@ public final class TerrenosPlus extends JavaPlugin {
         getServer().getPluginManager().registerEvents(
                 new TerrenosGUIListener(this, terrenoManager, marcoManager), this);
         getServer().getPluginManager().registerEvents(
-                new MarcosGUIListener(marcoManager), this);
+                new MarcosGUIListener(marcoManager, terrenoManager), this);
 
         PluginCommand command = getCommand("terreno");
         if (command != null) {
