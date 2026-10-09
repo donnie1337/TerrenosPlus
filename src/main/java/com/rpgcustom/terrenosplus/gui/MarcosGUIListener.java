@@ -1,6 +1,7 @@
 package com.rpgcustom.terrenosplus.gui;
 
 import com.rpgcustom.terrenosplus.service.MarcoManager;
+import com.rpgcustom.terrenosplus.service.TerrenoManager;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -11,9 +12,11 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 public final class MarcosGUIListener implements Listener {
 
     private final MarcoManager marcos;
+    private final TerrenoManager terrenos;
 
-    public MarcosGUIListener(MarcoManager marcos) {
+    public MarcosGUIListener(MarcoManager marcos, TerrenoManager terrenos) {
         this.marcos = marcos;
+        this.terrenos = terrenos;
     }
 
     @EventHandler
@@ -26,6 +29,10 @@ public final class MarcosGUIListener implements Listener {
         if (slot < 0 || slot >= event.getInventory().getSize()) return;
 
         if (holder.view() == MarcosGUIHolder.View.MAIN) {
+            if (slot == MarcosGUI.SLOT_BACK) {
+                player.openInventory(TerrenosGUI.main(player, terrenos));
+                return;
+            }
             if (slot == MarcosGUI.SLOT_DAILY) {
                 player.openInventory(DailyRewardsGUI.build(player, marcos));
             }
