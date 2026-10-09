@@ -50,7 +50,7 @@ messages:
   protected: "&cEste terreno pertence a &f{owner}&c."
   tracker-unprotected: "&7Este bloco não está protegido por nenhum terreno."
   tracker-info: "&7Dono: &f{owner} &8| &7Tamanho: &f{width}x{depth}"
-  marcos-hourly-reward: "&fVocê ficou 1 hora online e recebeu &e{amount} Marcos&f. Saldo: &e{balance}&f."
+  marcos-hourly-reward: "&fVocê ficou 1 hora online e recebeu &e{amount} Marcos&f."
   marcos-daily-claimed: "&aRecompensa diária coletada: &e+{amount} Marcos&a. Saldo: &e{balance}&a."
   no-claim: "&7Este local não possui dono."
   command-own-claim-only: "&cVocê precisa estar dentro de um terreno seu para usar este comando."
