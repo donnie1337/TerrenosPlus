@@ -15,9 +15,15 @@ public final class Terreno {
     private final int minZ;
     private final int maxX;
     private final int maxZ;
+    private final long createdAt;
 
     public Terreno(UUID id, UUID ownerId, String ownerName, String world,
                    int x1, int z1, int x2, int z2) {
+        this(id, ownerId, ownerName, world, x1, z1, x2, z2, 0L);
+    }
+
+    public Terreno(UUID id, UUID ownerId, String ownerName, String world,
+                   int x1, int z1, int x2, int z2, long createdAt) {
         this.id = id;
         this.ownerId = ownerId;
         this.ownerName = ownerName;
@@ -26,6 +32,7 @@ public final class Terreno {
         this.minZ = Math.min(z1, z2);
         this.maxX = Math.max(x1, x2);
         this.maxZ = Math.max(z1, z2);
+        this.createdAt = Math.max(0L, createdAt);
     }
 
     public UUID id() { return id; }
@@ -36,6 +43,7 @@ public final class Terreno {
     public int minZ() { return minZ; }
     public int maxX() { return maxX; }
     public int maxZ() { return maxZ; }
+    public long createdAt() { return createdAt; }
 
     public int width() { return maxX - minX + 1; }
     public int depth() { return maxZ - minZ + 1; }
