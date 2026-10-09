@@ -133,10 +133,7 @@ public final class TerrenosGUIListener implements Listener {
 
                 player.sendMessage(Component.empty());
                 player.sendMessage(
-                        Component.text("TERRENO").color(NamedTextColor.AQUA)
-                                .decorate(net.kyori.adventure.text.format.TextDecoration.BOLD)
-                                .append(Component.text(" • ").color(NamedTextColor.DARK_GRAY))
-                                .append(Component.text("Expansão").color(NamedTextColor.WHITE))
+                        Component.text("[Terrenos]").color(NamedTextColor.GREEN)
                 );
                 player.sendMessage(Component.empty());
                 player.sendMessage(
