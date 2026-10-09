@@ -208,37 +208,44 @@ public final class TerrenoCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
 
-            int requestedMarcos;
-            try {
-                requestedMarcos = Integer.parseInt(args[1]);
-            } catch (NumberFormatException exception) {
-                plugin.send(player, "messages.expand-invalid");
-                return true;
-            }
-
-            if (requestedMarcos <= 0) {
-                plugin.send(player, "messages.expand-invalid");
-                return true;
-            }
-
-            TerrenoManager.Direction direction = parseDirection(args[2]);
+            TerrenoManager.Direction direction = parseDirection(args[1]);
             if (direction == null) {
                 plugin.send(player, "messages.expand-direction-invalid");
                 return true;
             }
 
-            // O valor informado é a quantidade de Marcos que o jogador quer usar.
-            // Para avançar a borda em 1 bloco, é necessário pagar toda a extensão
-            // daquela borda: Leste/Oeste usa a profundidade; Norte/Sul usa a largura.
+            int requestedBlocks;
+            try {
+                requestedBlocks = Integer.parseInt(args[2]);
+            } catch (NumberFormatException exception) {
+                plugin.send(player, "messages.expand-invalid");
+                return true;
+            }
+
+            if (requestedBlocks <= 0) {
+                plugin.send(player, "messages.expand-invalid");
+                return true;
+            }
+
+            // Cada avanço de 1 bloco da borda cria uma faixa inteira.
+            // Norte/Sul: a faixa tem a largura atual.
+            // Leste/Oeste: a faixa tem a profundidade atual.
             long borderLength = switch (direction) {
                 case EAST, WEST -> current.depth();
                 case NORTH, SOUTH -> current.width();
             };
 
-            int costPerBlock = Math.max(1, plugin.getConfig().getInt("claims.expansion.marcos-per-block", 1));
-            long costPerLayer = borderLength * costPerBlock;
-            if (costPerLayer <= 0L || costPerLayer > Integer.MAX_VALUE) {
+            if (borderLength <= 0L || borderLength > Integer.MAX_VALUE) {
                 plugin.send(player, "messages.expand-invalid");
+                return true;
+            }
+
+            // A quantidade informada representa os blocos de área que o jogador
+            // quer adicionar. Só faixas completas são consideradas.
+            int expansionAmount = (int) (requestedBlocks / borderLength);
+            if (expansionAmount <= 0) {
+                plugin.send(player, "messages.expand-layer-too-small",
+                        "{required}", String.valueOf(borderLength));
                 return true;
             }
 
@@ -248,31 +255,15 @@ public final class TerrenoCommand implements CommandExecutor, TabCompleter {
                 case EAST, WEST -> current.width();
                 case NORTH, SOUTH -> current.depth();
             };
+
+            // Até completar 10x10, a expansão é gratuita. Leste/Oeste compartilham
+            // a franquia de largura; Norte/Sul compartilham a de profundidade.
             int freeLayers = Math.max(0, starterMax - currentDimension);
-
-            // O comando continua usando <marcos> como orçamento equivalente.
-            // Porém, enquanto a dimensão ainda não chegou ao tamanho inicial
-            // máximo (10 por padrão), as camadas correspondentes são gratuitas.
-            int expansionAmount;
-            if (requestedMarcos < costPerLayer) {
-                if (freeLayers <= 0) {
-                    plugin.send(player, "messages.expand-no-marcos",
-                            "{cost}", String.valueOf(costPerLayer),
-                            "{balance}", String.valueOf(marcoManager.getBalance(player.getUniqueId())));
-                    return true;
-                }
-                expansionAmount = 1;
-            } else {
-                expansionAmount = (int) Math.min(Integer.MAX_VALUE, requestedMarcos / costPerLayer);
-            }
-
-            if (expansionAmount <= 0) {
-                plugin.send(player, "messages.expand-invalid");
-                return true;
-            }
-
             int paidLayers = Math.max(0, expansionAmount - freeLayers);
-            long rawCost = (long) paidLayers * costPerLayer;
+
+            int costPerBlock = Math.max(1,
+                    plugin.getConfig().getInt("claims.expansion.marcos-per-block", 1));
+            long rawCost = (long) paidLayers * borderLength * costPerBlock;
             if (rawCost > Integer.MAX_VALUE) {
                 plugin.send(player, "messages.expand-invalid");
                 return true;
@@ -297,6 +288,7 @@ public final class TerrenoCommand implements CommandExecutor, TabCompleter {
                     trackingStickListener.showExpandedTerrain(player, expanded);
                     plugin.send(player, "messages.expanded",
                             "{amount}", String.valueOf(expansionAmount),
+                            "{blocks}", String.valueOf((long) expansionAmount * borderLength),
                             "{direction}", directionName(direction),
                             "{cost}", String.valueOf(cost),
                             "{width}", String.valueOf(expanded.width()),
@@ -324,7 +316,7 @@ public final class TerrenoCommand implements CommandExecutor, TabCompleter {
         player.sendMessage("§e/terreno untrust <nickname> §7- remove o acesso do jogador");
         player.sendMessage("§e/terreno explosao §7- ativa ou desativa explosões no terreno");
         player.sendMessage("§e/terreno listar §7- lista seus terrenos");
-        player.sendMessage("§e/terreno expandir <marcos> <norte|sul|leste|oeste> §7- expande o terreno");
+        player.sendMessage("§e/terreno expandir <norte|sul|leste|oeste> <quantidade> §7- expande o terreno");
         return true;
     }
 
@@ -367,26 +359,40 @@ public final class TerrenoCommand implements CommandExecutor, TabCompleter {
         if (!args[0].equalsIgnoreCase("expandir")) return List.of();
 
         if (args.length == 2) {
+            return filterSuggestions(args[1], List.of("norte", "sul", "leste", "oeste"));
+        }
+
+        if (args.length == 3) {
             Optional<Terreno> terrain = manager.find(player.getLocation());
             if (terrain.isEmpty() || !terrain.get().ownerId().equals(player.getUniqueId())) {
                 return List.of();
             }
 
             Terreno t = terrain.get();
-            int costPerBlock = Math.max(1, plugin.getConfig().getInt("claims.expansion.marcos-per-block", 1));
-            long northSouth = (long) t.width() * costPerBlock;
-            long eastWest = (long) t.depth() * costPerBlock;
+            TerrenoManager.Direction direction = parseDirection(args[1]);
+            if (direction == null) return List.of();
+
+            long borderLength = switch (direction) {
+                case EAST, WEST -> t.depth();
+                case NORTH, SOUTH -> t.width();
+            };
+
+            int starterMax = Math.max(1,
+                    plugin.getConfig().getInt("claims.initial-maximum-width", 10));
+            int currentDimension = switch (direction) {
+                case EAST, WEST -> t.width();
+                case NORTH, SOUTH -> t.depth();
+            };
+            int freeLayers = Math.max(0, starterMax - currentDimension);
 
             Set<String> values = new LinkedHashSet<>();
-            addAmountSuggestion(values, northSouth);
-            addAmountSuggestion(values, eastWest);
-            addAmountSuggestion(values, northSouth * 2L);
-            addAmountSuggestion(values, eastWest * 2L);
-            return filterSuggestions(args[1], new ArrayList<>(values));
-        }
-
-        if (args.length == 3) {
-            return filterSuggestions(args[2], List.of("norte", "sul", "leste", "oeste"));
+            addAmountSuggestion(values, borderLength);
+            addAmountSuggestion(values, borderLength * 2L);
+            if (freeLayers > 0) {
+                addAmountSuggestion(values, borderLength * freeLayers);
+            }
+            addAmountSuggestion(values, borderLength * Math.max(1L, freeLayers + 1L));
+            return filterSuggestions(args[2], new ArrayList<>(values));
         }
 
         return List.of();
