@@ -20,11 +20,8 @@ public final class TerrenosGUI {
     public static final int SLOT_MANAGE = 13;
     public static final int SLOT_MARCOS = 15;
 
-    public static final int SLOT_EXPAND_NORTH = 10;
-    public static final int SLOT_EXPAND_WEST = 12;
-    public static final int SLOT_EXPLOSIONS = 13;
-    public static final int SLOT_EXPAND_EAST = 14;
-    public static final int SLOT_EXPAND_SOUTH = 16;
+    public static final int SLOT_EXPAND = 11;
+    public static final int SLOT_EXPLOSIONS = 15;
     public static final int SLOT_BACK = 22;
 
     private TerrenosGUI() {
@@ -95,14 +92,25 @@ public final class TerrenosGUI {
         long eastWestCost = (long) terrain.depth() * costPerBlock;
         int balance = marcos.getBalance(player.getUniqueId());
 
-        inventory.setItem(SLOT_EXPAND_NORTH, expansionItem(
-                Material.ARROW, "Norte", northSouthCost, balance));
-        inventory.setItem(SLOT_EXPAND_SOUTH, expansionItem(
-                Material.ARROW, "Sul", northSouthCost, balance));
-        inventory.setItem(SLOT_EXPAND_WEST, expansionItem(
-                Material.ARROW, "Oeste", eastWestCost, balance));
-        inventory.setItem(SLOT_EXPAND_EAST, expansionItem(
-                Material.ARROW, "Leste", eastWestCost, balance));
+        inventory.setItem(SLOT_EXPAND, item(
+                Material.GRASS_BLOCK,
+                "&b&lEXPANDIR TERRENO",
+                List.of(
+                        "",
+                        "&fUse o comando:",
+                        "&e/terreno expandir <marcos> <direção>",
+                        "",
+                        "&7Exemplo: &f/terreno expandir 10 leste",
+                        "",
+                        "&7Custo para avançar 1 bloco:",
+                        "&fNorte/Sul: &e" + northSouthCost + " Marcos",
+                        "&fLeste/Oeste: &e" + eastWestCost + " Marcos",
+                        "",
+                        "&7Seu saldo: &e" + balance + " Marcos",
+                        "",
+                        "&aClique para ver a instrução no chat"
+                )
+        ));
 
         boolean explosions = terrain.explosionsEnabled();
         inventory.setItem(SLOT_EXPLOSIONS, item(
@@ -126,23 +134,6 @@ public final class TerrenosGUI {
         ));
 
         return inventory;
-    }
-
-    private static ItemStack expansionItem(Material material, String direction, long cost, int balance) {
-        return item(
-                material,
-                "&b&lEXPANDIR " + direction.toUpperCase(),
-                List.of(
-                        "",
-                        "&fAvança esta borda em &e1 bloco&f.",
-                        "&fO custo corresponde à faixa inteira.",
-                        "",
-                        "&7Custo: &e" + cost + " Marcos",
-                        "&7Seu saldo: &e" + balance + " Marcos",
-                        "",
-                        balance >= cost ? "&aClique para expandir" : "&cMarcos insuficientes"
-                )
-        );
     }
 
     static ItemStack item(Material material, String name, List<String> lore) {
