@@ -63,7 +63,7 @@ public final class TerrenosPlus extends JavaPlugin {
     }
 
     public void send(Player player, String path, String... replacements) {
-        String prefix = getConfig().getString("messages.prefix", "&a[Terrenos] &r");
+        String prefix = "&a[Terrenos] &r";
         String message = getConfig().getString(path);
         if (message == null || message.equals(path)) {
             message = switch (path) {
