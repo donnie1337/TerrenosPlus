@@ -59,6 +59,14 @@ public final class TerrenoManager implements TerrenosApi {
                 long ownerLastSeenAt = data.getLong(base + "last-seen-at", 0L);
                 boolean explosionsEnabled = data.getBoolean(base + "explosions-enabled", false);
                 boolean visitorFlyEnabled = data.getBoolean(base + "visitor-fly-enabled", true);
+                Set<UUID> trustedPlayers = new HashSet<>();
+                for (String trusted : data.getStringList(base + "trusted-players")) {
+                    try {
+                        trustedPlayers.add(UUID.fromString(trusted));
+                    } catch (IllegalArgumentException ignored) {
+                        plugin.getLogger().warning("UUID trusted inválido ignorado em terreno " + id + ": " + trusted);
+                    }
+                }
                 if (world == null) continue;
 
                 if (ownerLastSeenAt <= 0L) {
@@ -71,7 +79,7 @@ public final class TerrenoManager implements TerrenosApi {
                 Terreno terreno = new Terreno(
                         id, owner, ownerName, world,
                         minX, minZ, maxX, maxZ,
-                        createdAt, ownerLastSeenAt, explosionsEnabled, visitorFlyEnabled
+                        createdAt, ownerLastSeenAt, explosionsEnabled, visitorFlyEnabled, trustedPlayers
                 );
                 terrenos.put(id, terreno);
                 index(terreno);
@@ -96,6 +104,8 @@ public final class TerrenoManager implements TerrenosApi {
             data.set(base + "last-seen-at", terreno.ownerLastSeenAt());
             data.set(base + "explosions-enabled", terreno.explosionsEnabled());
             data.set(base + "visitor-fly-enabled", terreno.visitorFlyEnabled());
+            data.set(base + "trusted-players",
+                    terreno.trustedPlayers().stream().map(UUID::toString).sorted().toList());
         }
 
         try {
@@ -246,6 +256,20 @@ public final class TerrenoManager implements TerrenosApi {
         return true;
     }
 
+    public boolean trust(Terreno terreno, UUID playerId) {
+        if (terreno == null || playerId == null || !terrenos.containsKey(terreno.id())) return false;
+        boolean changed = terreno.trust(playerId);
+        if (changed) save();
+        return changed;
+    }
+
+    public boolean untrust(Terreno terreno, UUID playerId) {
+        if (terreno == null || playerId == null || !terrenos.containsKey(terreno.id())) return false;
+        boolean changed = terreno.untrust(playerId);
+        if (changed) save();
+        return changed;
+    }
+
     public boolean remove(Terreno terreno) {
         if (terreno == null || terrenos.remove(terreno.id()) == null) return false;
         unindex(terreno);
@@ -303,7 +327,9 @@ public final class TerrenoManager implements TerrenosApi {
     public boolean canBuild(Player player, Location location) {
         if (player.hasPermission("terrenosplus.bypass")) return true;
         Optional<Terreno> terreno = find(location);
-        return terreno.isEmpty() || terreno.get().ownerId().equals(player.getUniqueId());
+        return terreno.isEmpty()
+                || terreno.get().ownerId().equals(player.getUniqueId())
+                || terreno.get().isTrusted(player.getUniqueId());
     }
 
     @Override
@@ -314,7 +340,9 @@ public final class TerrenoManager implements TerrenosApi {
     @Override
     public boolean hasBuildAccess(UUID playerId, Location location) {
         Optional<Terreno> terreno = find(location);
-        return terreno.isEmpty() || terreno.get().ownerId().equals(playerId);
+        return terreno.isEmpty()
+                || terreno.get().ownerId().equals(playerId)
+                || terreno.get().isTrusted(playerId);
     }
 
     private Terreno findOverlap(Terreno candidate) {
