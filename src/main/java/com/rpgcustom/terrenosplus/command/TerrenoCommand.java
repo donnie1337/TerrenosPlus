@@ -2,6 +2,7 @@ package com.rpgcustom.terrenosplus.command;
 
 import com.rpgcustom.terrenosplus.TerrenosPlus;
 import com.rpgcustom.terrenosplus.model.Terreno;
+import com.rpgcustom.terrenosplus.gui.TerrenosGUI;
 import com.rpgcustom.terrenosplus.service.TerrenoManager;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -28,7 +29,12 @@ public final class TerrenoCommand implements CommandExecutor {
             return true;
         }
 
-        if (args.length == 0 || args[0].equalsIgnoreCase("info")) {
+        if (args.length == 0) {
+            player.openInventory(TerrenosGUI.main(player, manager));
+            return true;
+        }
+
+        if (args[0].equalsIgnoreCase("info")) {
             Optional<Terreno> terreno = manager.find(player.getLocation());
             if (terreno.isEmpty()) {
                 plugin.send(player, "messages.no-claim");
