@@ -29,11 +29,11 @@ public final class TerrenosListGUI {
         for (int i = 0; i < visible; i++) {
             Terreno terrain = terrains.get(i);
             inventory.setItem(CONTENT_SLOTS[i], TerrenosGUI.item(
-                    Material.GRASS_BLOCK,
+                    displayWorldIcon(terrain.world()),
                     "&aTerreno #" + (i + 1),
                     List.of(
                             "",
-                            "&fMundo: &a" + displayWorldName(terrain.world()),
+                            "&fMundo: " + displayWorldName(terrain.world()),
                             "&fÁrea: &e" + terrain.area() + " blocos",
                             "&fTamanho: &e" + terrain.width() + "x" + terrain.depth(),
                             "",
@@ -69,13 +69,26 @@ public final class TerrenosListGUI {
     }
 
     private static String displayWorldName(String worldName) {
-        if (worldName == null || worldName.isBlank()) return "Desconhecido";
-        if ("world".equalsIgnoreCase(worldName)
-                || "minecraft:overworld".equalsIgnoreCase(worldName)
-                || "overworld".equalsIgnoreCase(worldName)) {
-            return "Overworld";
-        }
-        return worldName;
+        if (worldName == null || worldName.isBlank()) return "&7Desconhecido";
+
+        return switch (worldName.toLowerCase(java.util.Locale.ROOT)) {
+            case "world", "overworld", "minecraft:overworld" -> "&aOverworld";
+            case "world_nether", "nether", "minecraft:the_nether" -> "&cNether";
+            case "world_the_end", "the_end", "end", "minecraft:the_end" -> "&5The End";
+            case "mining", "mineracao", "mineração" -> "&eMineração";
+            default -> "&f" + Character.toUpperCase(worldName.charAt(0)) + worldName.substring(1);
+        };
+    }
+
+    private static Material displayWorldIcon(String worldName) {
+        if (worldName == null || worldName.isBlank()) return Material.GRASS_BLOCK;
+
+        return switch (worldName.toLowerCase(java.util.Locale.ROOT)) {
+            case "world_nether", "nether", "minecraft:the_nether" -> Material.NETHERRACK;
+            case "world_the_end", "the_end", "end", "minecraft:the_end" -> Material.END_STONE;
+            case "mining", "mineracao", "mineração" -> Material.DEEPSLATE_DIAMOND_ORE;
+            default -> Material.GRASS_BLOCK;
+        };
     }
 
     public static int backSlot(int inventorySize) {
