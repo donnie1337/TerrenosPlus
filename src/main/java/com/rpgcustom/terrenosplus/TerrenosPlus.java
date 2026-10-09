@@ -69,20 +69,32 @@ public final class TerrenosPlus extends JavaPlugin {
         getServer().getPluginManager().registerEvents(
                 new MarcosGUIListener(marcoManager, terrenoManager), this);
 
+        TerrenoCommand terrenoCommand =
+                new TerrenoCommand(this, terrenoManager, trackingStickListener, marcoManager);
+
         PluginCommand command = getCommand("terreno");
-        if (command != null) {
-            TerrenoCommand terrenoCommand =
-                    new TerrenoCommand(this, terrenoManager, trackingStickListener, marcoManager);
-            command.setExecutor(terrenoCommand);
-            command.setTabCompleter(terrenoCommand);
+        if (command == null) {
+            throw new IllegalStateException(
+                    "Comando 'terreno' não foi registrado pelo plugin.yml. Verifique o JAR instalado."
+            );
         }
+        command.setExecutor(terrenoCommand);
+        command.setTabCompleter(terrenoCommand);
 
         PluginCommand marcosCommand = getCommand("marcos");
-        if (marcosCommand != null) {
-            marcosCommand.setExecutor(new MarcosCommand(marcoManager));
+        if (marcosCommand == null) {
+            throw new IllegalStateException(
+                    "Comando 'marcos' não foi registrado pelo plugin.yml. Verifique o JAR instalado."
+            );
         }
+        MarcosCommand marcosExecutor = new MarcosCommand(marcoManager);
+        marcosCommand.setExecutor(marcosExecutor);
+        marcosCommand.setTabCompleter(marcosExecutor);
 
-        getLogger().info("TerrenosPlus ativado com " + terrenoManager.all().size() + " terreno(s).");
+        getLogger().info(
+                "TerrenosPlus ativado com " + terrenoManager.all().size()
+                        + " terreno(s). Comandos registrados: /terreno, /terrenos, /claim, /marcos e /marco."
+        );
     }
 
     @Override
