@@ -311,16 +311,20 @@ public final class TrackingStickListener implements Listener {
         Location maxMax = groundCorner(world, terrain.maxX(), terrain.maxZ());
 
         int step = Math.max(1, Math.min(4, Math.max(terrain.width(), terrain.depth()) / 20));
+        double fixedY = Math.max(
+                Math.max(minMin.getY(), minMax.getY()),
+                Math.max(maxMin.getY(), maxMax.getY())
+        ) + 2.10D;
 
-        // Cada lado liga diretamente um bloco de ouro ao outro. Se um canto estiver
-        // mais alto ou mais baixo, o Y é interpolado e a linha acompanha a diagonal.
-        showEdge(player, minMin, maxMin, step, color);
-        showEdge(player, minMax, maxMax, step, color);
-        showEdge(player, minMin, minMax, step, color);
-        showEdge(player, maxMin, maxMax, step, color);
+        // Toda a borda usa a mesma altura e fica um bloco acima dos marcadores,
+        // evitando o efeito amarelo colado nos blocos da borda.
+        showEdge(player, minMin, maxMin, step, color, fixedY);
+        showEdge(player, minMax, maxMax, step, color, fixedY);
+        showEdge(player, minMin, minMax, step, color, fixedY);
+        showEdge(player, maxMin, maxMax, step, color, fixedY);
     }
 
-    private void showEdge(Player player, Location from, Location to, int step, Color color) {
+    private void showEdge(Player player, Location from, Location to, int step, Color color, double fixedY) {
         double dx = to.getX() - from.getX();
         double dz = to.getZ() - from.getZ();
         double horizontalDistance = Math.max(Math.abs(dx), Math.abs(dz));
@@ -329,9 +333,8 @@ public final class TrackingStickListener implements Listener {
         for (int i = 0; i <= segments; i++) {
             double progress = i / (double) segments;
             double x = from.getX() + (dx * progress) + 0.5;
-            double y = from.getY() + ((to.getY() - from.getY()) * progress) + 1.10;
             double z = from.getZ() + (dz * progress) + 0.5;
-            particle(player, new Location(from.getWorld(), x, y, z), color);
+            particle(player, new Location(from.getWorld(), x, fixedY, z), color);
         }
     }
 
