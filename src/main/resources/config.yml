@@ -32,6 +32,7 @@ messages:
   created: "&aTerreno criado com &f{area}&a blocos."
   protected: "&cEste terreno pertence a &f{owner}&c."
   no-claim: "&7Este local não possui dono."
+  command-own-claim-only: "&cVocê precisa estar dentro de um terreno seu para usar este comando."
   info-owner: "&7Dono: &f{owner} &8| &7Área: &f{area} &8| &7ID: &f{id}"
   removed: "&aTerreno removido."
   not-owner: "&cVocê não é o dono deste terreno."
