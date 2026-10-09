@@ -214,8 +214,7 @@ public final class TrackingStickListener implements Listener {
 
     private void flashRemovedBoundary(Player player, Terreno terrain) {
         // Mantém o contorno vermelho visível por mais tempo após a remoção.
-        // O mesmo cálculo de altura do tracker é usado, então o efeito acompanha
-        // o relevo em diagonal e permanece um bloco acima dos blocos da borda.
+        // A altura é recalculada a cada pulso para acompanhar o jogador.
         for (int pulse = 0; pulse < 8; pulse++) {
             plugin.getServer().getScheduler().runTaskLater(
                     plugin,
@@ -329,15 +328,17 @@ public final class TrackingStickListener implements Listener {
         var world = plugin.getServer().getWorld(terrain.world());
         if (world == null) return;
 
-        Location minMin = groundCorner(world, terrain.minX(), terrain.minZ());
-        Location minMax = groundCorner(world, terrain.minX(), terrain.maxZ());
-        Location maxMin = groundCorner(world, terrain.maxX(), terrain.minZ());
-        Location maxMax = groundCorner(world, terrain.maxX(), terrain.maxZ());
+        double boundaryY = player.getLocation().getY() + 1.0D;
+        Location minMin = new Location(world, terrain.minX(), boundaryY, terrain.minZ());
+        Location minMax = new Location(world, terrain.minX(), boundaryY, terrain.maxZ());
+        Location maxMin = new Location(world, terrain.maxX(), boundaryY, terrain.minZ());
+        Location maxMax = new Location(world, terrain.maxX(), boundaryY, terrain.maxZ());
 
         int step = Math.max(1, Math.min(4, Math.max(terrain.width(), terrain.depth()) / 20));
 
-        // A linha acompanha a diferença de altura entre os cantos em diagonal,
-        // mas permanece um bloco acima dos marcadores/blocos da borda.
+        // As partículas seguem a altura atual do jogador. Assim, a borda continua
+        // visível em cavernas e construções subterrâneas. Os blocos de ouro seguem
+        // usando groundCorner(), permanecendo no bloco mais alto de cada canto.
         showEdge(player, minMin, maxMin, step, color);
         showEdge(player, minMax, maxMax, step, color);
         showEdge(player, minMin, minMax, step, color);
@@ -353,7 +354,7 @@ public final class TrackingStickListener implements Listener {
         for (int i = 0; i <= segments; i++) {
             double progress = i / (double) segments;
             double x = from.getX() + (dx * progress) + 0.5;
-            double y = from.getY() + ((to.getY() - from.getY()) * progress) + 2.10D;
+            double y = from.getY();
             double z = from.getZ() + (dz * progress) + 0.5;
             particle(player, new Location(from.getWorld(), x, y, z), color);
         }
