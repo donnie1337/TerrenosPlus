@@ -115,7 +115,7 @@ public final class TerrenosGUI {
 
         boolean visitorFly = terrain.visitorFlyEnabled();
         inventory.setItem(SLOT_VISITOR_FLY, item(
-                visitorFly ? Material.FEATHER : Material.CHAIN,
+                visitorFly ? Material.FEATHER : Material.IRON_BARS,
                 "&b&lFLY DE VISITANTES",
                 List.of(
                         "",
