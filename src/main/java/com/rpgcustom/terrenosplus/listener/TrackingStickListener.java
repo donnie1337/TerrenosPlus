@@ -1,0 +1,84 @@
+package com.rpgcustom.terrenosplus.listener;
+
+import com.rpgcustom.terrenosplus.TerrenosPlus;
+import com.rpgcustom.terrenosplus.model.Terreno;
+import com.rpgcustom.terrenosplus.service.TerrenoManager;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.Particle;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
+
+public final class TrackingStickListener implements Listener {
+
+    private static final NamespacedKey TERRAIN_TOOL_KEY = new NamespacedKey("terrenosplus", "tool");
+
+    private final TerrenosPlus plugin;
+    private final TerrenoManager manager;
+
+    public TrackingStickListener(TerrenosPlus plugin, TerrenoManager manager) {
+        this.plugin = plugin;
+        this.manager = manager;
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onUse(PlayerInteractEvent event) {
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK || event.getClickedBlock() == null) return;
+        ItemStack item = event.getItem();
+        if (!isTrackingStick(item)) return;
+
+        event.setCancelled(true);
+        Player player = event.getPlayer();
+        var terrain = manager.find(event.getClickedBlock().getLocation());
+
+        if (terrain.isEmpty()) {
+            plugin.send(player, "messages.tracker-unprotected");
+            return;
+        }
+
+        Terreno t = terrain.get();
+        plugin.send(player, "messages.tracker-info",
+                "{owner}", t.ownerName(),
+                "{area}", String.valueOf(t.area()),
+                "{width}", String.valueOf(t.width()),
+                "{depth}", String.valueOf(t.depth()));
+
+        if (t.ownerId().equals(player.getUniqueId()) || player.hasPermission("terrenosplus.admin")) {
+            showBoundary(player, t);
+        }
+    }
+
+    private boolean isTrackingStick(ItemStack item) {
+        if (item == null || item.getType() != Material.STICK || !item.hasItemMeta()) return false;
+        String type = item.getItemMeta().getPersistentDataContainer()
+                .get(TERRAIN_TOOL_KEY, PersistentDataType.STRING);
+        return "inspect".equals(type);
+    }
+
+    private void showBoundary(Player player, Terreno terrain) {
+        var world = plugin.getServer().getWorld(terrain.world());
+        if (world == null) return;
+
+        int y = player.getLocation().getBlockY() + 1;
+        int step = Math.max(1, Math.min(4, Math.max(terrain.width(), terrain.depth()) / 20));
+
+        for (int x = terrain.minX(); x <= terrain.maxX(); x += step) {
+            particle(player, new Location(world, x + 0.5, y, terrain.minZ() + 0.5));
+            particle(player, new Location(world, x + 0.5, y, terrain.maxZ() + 0.5));
+        }
+        for (int z = terrain.minZ(); z <= terrain.maxZ(); z += step) {
+            particle(player, new Location(world, terrain.minX() + 0.5, y, z + 0.5));
+            particle(player, new Location(world, terrain.maxX() + 0.5, y, z + 0.5));
+        }
+    }
+
+    private void particle(Player player, Location location) {
+        player.spawnParticle(Particle.HAPPY_VILLAGER, location, 2, 0.05, 0.05, 0.05, 0.0);
+    }
+}
