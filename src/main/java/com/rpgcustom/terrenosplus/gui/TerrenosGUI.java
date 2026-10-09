@@ -134,7 +134,6 @@ public final class TerrenosGUI {
                         "&fque possuem permissão para voar.",
                         "",
                         "&7Dono do terreno: &asempre permitido",
-                        "&7Staffs: &asempre permitidos",
                         "",
                         "&7Estado: " + (visitorFly ? "&aATIVADO" : "&cDESATIVADO"),
                         "",
