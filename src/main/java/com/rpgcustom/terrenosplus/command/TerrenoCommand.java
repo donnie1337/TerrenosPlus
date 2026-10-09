@@ -30,6 +30,12 @@ public final class TerrenoCommand implements CommandExecutor {
         }
 
         if (args.length == 0) {
+            Optional<Terreno> current = manager.find(player.getLocation());
+            if (current.isEmpty() || !current.get().ownerId().equals(player.getUniqueId())) {
+                plugin.send(player, "messages.command-own-claim-only");
+                return true;
+            }
+
             player.openInventory(TerrenosGUI.main(player, manager));
             return true;
         }
