@@ -89,7 +89,6 @@ public final class TerrenosPlus extends JavaPlugin {
         }
         MarcosCommand marcosExecutor = new MarcosCommand(marcoManager);
         marcosCommand.setExecutor(marcosExecutor);
-        marcosCommand.setTabCompleter(marcosExecutor);
 
         getLogger().info(
                 "TerrenosPlus ativado com " + terrenoManager.all().size()
