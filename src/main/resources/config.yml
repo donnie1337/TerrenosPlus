@@ -13,7 +13,8 @@ claims:
   maximum-area-per-claim: 10000
 
   expansion:
-    # 1 Marco = 1 bloco de expansão na direção escolhida.
+    # Cada novo bloco de área custa esta quantidade de Marcos.
+    # O comando /terreno expandir <quantidade> usa <quantidade> como orçamento em Marcos.
     marcos-per-block: 1
 
   # Limite de terrenos por cargo do CargoPlus.
@@ -80,8 +81,8 @@ messages:
   command-own-claim-only: "&cVocê precisa estar dentro de um terreno seu para usar este comando."
   info-owner: "&7Dono: &f{owner} &8| &7Área: &f{area} Blocos &8| &7Tamanho: &f{width}x{depth} &8| &7Data de criação: &f{created} &8| &7ID: &f{id}"
   expanded: "&aTerreno expandido em &f{amount} blocos &apara &f{direction}&a. Novo tamanho: &f{width}x{depth} &8| &7Custo: &e{cost} Marcos &8| &7Saldo: &e{balance} Marcos"
-  expand-usage: "&cUse: /terreno expandir <quantidade>. A expansão acontece na direção que você está olhando."
-  expand-invalid: "&cInforme uma quantidade válida de blocos para expandir."
+  expand-usage: "&cUse: /terreno expandir <marcos>. A expansão acontece na direção que você está olhando."
+  expand-invalid: "&cInforme uma quantidade válida de Marcos para usar na expansão."
   expand-no-marcos: "&cVocê precisa de &e{cost} Marcos &cpara esta expansão. Saldo atual: &e{balance} Marcos&c."
   expand-overlap: "&cNão é possível expandir: a nova área encostaria no terreno de &f{owner}&c."
   expand-too-large: "&cA expansão ultrapassaria o limite máximo de &f{max} blocos &cde área."
