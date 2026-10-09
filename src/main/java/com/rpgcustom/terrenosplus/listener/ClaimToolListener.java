@@ -3,6 +3,7 @@ package com.rpgcustom.terrenosplus.listener;
 import com.rpgcustom.terrenosplus.TerrenosPlus;
 import com.rpgcustom.terrenosplus.model.Terreno;
 import com.rpgcustom.terrenosplus.service.TerrenoManager;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -217,11 +218,40 @@ public final class ClaimToolListener implements Listener {
             plugin.getServer().getScheduler().runTaskLater(
                     plugin,
                     () -> {
-                        if (player.isOnline()) showBoundary(player, terreno, Particle.WAX_ON);
+                        if (player.isOnline()) showYellowDustBoundary(player, terreno);
                     },
                     i * 20L
             );
         }
+    }
+
+    private void showYellowDustBoundary(Player player, Terreno terreno) {
+        var world = plugin.getServer().getWorld(terreno.world());
+        if (world == null) return;
+
+        int y = player.getLocation().getBlockY() + 1;
+        int step = Math.max(1, Math.min(4, Math.max(terreno.width(), terreno.depth()) / 20));
+        Particle.DustOptions yellow = new Particle.DustOptions(Color.YELLOW, 1.15f);
+
+        for (int x = terreno.minX(); x <= terreno.maxX(); x += step) {
+            yellowParticle(player, new Location(world, x + 0.5, y, terreno.minZ() + 0.5), yellow);
+            yellowParticle(player, new Location(world, x + 0.5, y, terreno.maxZ() + 0.5), yellow);
+        }
+        for (int z = terreno.minZ(); z <= terreno.maxZ(); z += step) {
+            yellowParticle(player, new Location(world, terreno.minX() + 0.5, y, z + 0.5), yellow);
+            yellowParticle(player, new Location(world, terreno.maxX() + 0.5, y, z + 0.5), yellow);
+        }
+    }
+
+    private void yellowParticle(Player player, Location location, Particle.DustOptions yellow) {
+        player.spawnParticle(
+                Particle.DUST,
+                location,
+                2,
+                0.05, 0.05, 0.05,
+                0.0,
+                yellow
+        );
     }
 
     private void showGoldClaimMarkers(Player player, Terreno terreno) {
