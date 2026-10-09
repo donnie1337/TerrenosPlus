@@ -4,6 +4,7 @@ import com.rpgcustom.terrenosplus.api.TerrenosApi;
 import com.rpgcustom.terrenosplus.command.TerrenoCommand;
 import com.rpgcustom.terrenosplus.listener.ClaimToolListener;
 import com.rpgcustom.terrenosplus.listener.ProtectionListener;
+import com.rpgcustom.terrenosplus.listener.TrackingStickListener;
 import com.rpgcustom.terrenosplus.gui.TerrenosGUIListener;
 import com.rpgcustom.terrenosplus.service.TerrenoManager;
 import org.bukkit.ChatColor;
@@ -34,6 +35,8 @@ public final class TerrenosPlus extends JavaPlugin {
                 new ClaimToolListener(this, terrenoManager), this);
         getServer().getPluginManager().registerEvents(
                 new ProtectionListener(this, terrenoManager), this);
+        getServer().getPluginManager().registerEvents(
+                new TrackingStickListener(this, terrenoManager), this);
         getServer().getPluginManager().registerEvents(
                 new TerrenosGUIListener(this, terrenoManager), this);
 
