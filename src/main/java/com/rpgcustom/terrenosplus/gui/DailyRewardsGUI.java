@@ -5,6 +5,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -69,20 +71,28 @@ public final class DailyRewardsGUI {
                 List.of("", "&7Clique para voltar ao menu de Marcos.")
         ));
 
-        inventory.setItem(SLOT_PROFILE, TerrenosGUI.item(
-                Material.PLAYER_HEAD,
-                "&b&lᴍᴀʀᴄᴏs",
-                List.of(
-                        "",
-                        "&fSaldo atual: &e" + marcos.getBalance(player.getUniqueId()) + " Marcos",
-                        "",
-                        claimedToday
-                                ? "&7Você já coletou a recompensa de hoje."
-                                : "&aVocê possui uma recompensa disponível."
-                )
-        ));
+        inventory.setItem(SLOT_PROFILE, profile(player, marcos, claimedToday));
 
         return inventory;
+    }
+
+    private static ItemStack profile(Player player, MarcoManager marcos, boolean claimedToday) {
+        ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+        SkullMeta meta = (SkullMeta) head.getItemMeta();
+        if (meta != null) {
+            meta.setOwningPlayer(player);
+            meta.setDisplayName(TerrenosGUI.color("&b&lᴍᴀʀᴄᴏs"));
+            meta.setLore(List.of(
+                    "",
+                    TerrenosGUI.color("&fSaldo atual: &e" + marcos.getBalance(player.getUniqueId()) + " Marcos"),
+                    "",
+                    TerrenosGUI.color(claimedToday
+                            ? "&7Você já coletou a recompensa de hoje."
+                            : "&aVocê possui uma recompensa disponível.")
+            ));
+            head.setItemMeta(meta);
+        }
+        return head;
     }
 
     public static int dayFromSlot(int slot) {
