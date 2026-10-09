@@ -11,8 +11,8 @@ import java.util.List;
 
 public final class TerrenosListGUI {
 
-    private static final int[] COMPACT_CONTENT_SLOTS = {2, 3, 5, 6};
-    private static final int[] EXPANDED_CONTENT_SLOTS = {2, 3, 5, 6, 13};
+    private static final int[] COMPACT_CONTENT_SLOTS = {0, 1, 2, 3};
+    private static final int[] EXPANDED_CONTENT_SLOTS = {0, 1, 2, 3, 4};
 
     private TerrenosListGUI() {
     }
@@ -72,6 +72,6 @@ public final class TerrenosListGUI {
     }
 
     public static int backSlot(int inventorySize) {
-        return inventorySize <= 9 ? 0 : 9;
+        return inventorySize <= 9 ? 8 : 17;
     }
 }
