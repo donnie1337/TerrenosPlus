@@ -7,6 +7,8 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public final class TerrenosListGUI {
@@ -17,7 +19,13 @@ public final class TerrenosListGUI {
     }
 
     public static Inventory build(Player player, TerrenoManager manager, int page) {
-        List<Terreno> terrains = manager.getByOwner(player.getUniqueId());
+        List<Terreno> terrains = new ArrayList<>(manager.getByOwner(player.getUniqueId()));
+        Comparator<Terreno> byCreatedAt = Comparator.comparingLong(Terreno::createdAt);
+        if ("antigo".equalsIgnoreCase(terrainSort(player))) {
+            terrains.sort(byCreatedAt);
+        } else {
+            terrains.sort(byCreatedAt.reversed());
+        }
 
         int size = 36;
 
@@ -66,6 +74,19 @@ public final class TerrenosListGUI {
         }
 
         return inventory;
+    }
+
+    private static String terrainSort(Player player) {
+        org.bukkit.plugin.Plugin utilidades = Bukkit.getPluginManager().getPlugin("UtilidadesPlus");
+        if (utilidades == null || !utilidades.isEnabled()) return "recente";
+        try {
+            Object result = utilidades.getClass()
+                    .getMethod("terrainSort", Player.class)
+                    .invoke(utilidades, player);
+            return result instanceof String value ? value : "recente";
+        } catch (ReflectiveOperationException | LinkageError ignored) {
+            return "recente";
+        }
     }
 
     private static String displayWorldName(String worldName) {
