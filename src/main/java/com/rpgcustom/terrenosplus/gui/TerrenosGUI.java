@@ -30,6 +30,7 @@ public final class TerrenosGUI {
     public static final int SLOT_EXPLOSIONS = 15;
     public static final int SLOT_TRUSTED = 20;
     public static final int SLOT_BACK = 22;
+    public static final int SLOT_TITLE = 24;
     public static final int SLOT_TRUSTED_BACK = 49;
 
     private TerrenosGUI() {
@@ -169,6 +170,23 @@ public final class TerrenosGUI {
                         terrain.trustedPlayers().isEmpty()
                                 ? "&7Nenhum jogador possui trust."
                                 : "&aClique para visualizar"
+                )
+        ));
+
+        boolean titleEnabled = terrain.titleEnabled();
+        inventory.setItem(SLOT_TITLE, item(
+                titleEnabled ? Material.LIME_DYE : Material.GRAY_DYE,
+                "&bMensagem de entrada",
+                List.of(
+                        "",
+                        "&fControla a mensagem em title",
+                        "&fmostrada ao entrar neste terreno.",
+                        "",
+                        "&7Exemplo: &fTerreno de " + terrain.ownerName(),
+                        "",
+                        "&7Estado: " + (titleEnabled ? "&aATIVADA" : "&cDESATIVADA"),
+                        "",
+                        "&eClique para " + (titleEnabled ? "desativar" : "ativar")
                 )
         ));
 
