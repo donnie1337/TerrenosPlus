@@ -101,19 +101,17 @@ public final class TerrenoCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
 
-            if (confirmTerrainRemoval(player)) {
-                long now = System.currentTimeMillis();
-                PendingTerrainRemoval pending = pendingTerrainRemovals.get(player.getUniqueId());
-                if (pending == null || !pending.terrainId().equals(t.id()) || pending.expiresAt() < now) {
-                    pendingTerrainRemovals.put(
-                            player.getUniqueId(),
-                            new PendingTerrainRemoval(t.id(), now + 10_000L)
-                    );
-                    player.sendMessage("§a[Terrenos] §fDigite §a/terreno remover §fnovamente em até §e10 segundos §fpara confirmar.");
-                    return true;
-                }
-                pendingTerrainRemovals.remove(player.getUniqueId());
+            long now = System.currentTimeMillis();
+            PendingTerrainRemoval pending = pendingTerrainRemovals.get(player.getUniqueId());
+            if (pending == null || !pending.terrainId().equals(t.id()) || pending.expiresAt() < now) {
+                pendingTerrainRemovals.put(
+                        player.getUniqueId(),
+                        new PendingTerrainRemoval(t.id(), now + 10_000L)
+                );
+                player.sendMessage("§a[Terrenos] §fDigite §a/terreno remover §fnovamente em até §e10 segundos §fpara confirmar.");
+                return true;
             }
+            pendingTerrainRemovals.remove(player.getUniqueId());
 
             manager.remove(t);
             trackingStickListener.onTerrainRemoved(player, t);
@@ -405,19 +403,6 @@ public final class TerrenoCommand implements CommandExecutor, TabCompleter {
         }
 
         return List.of();
-    }
-
-    private boolean confirmTerrainRemoval(Player player) {
-        org.bukkit.plugin.Plugin utilidades = plugin.getServer().getPluginManager().getPlugin("UtilidadesPlus");
-        if (utilidades == null || !utilidades.isEnabled()) return true;
-        try {
-            Object result = utilidades.getClass()
-                    .getMethod("confirmTerrainRemoval", Player.class)
-                    .invoke(utilidades, player);
-            return !(result instanceof Boolean value) || value;
-        } catch (ReflectiveOperationException | LinkageError ignored) {
-            return true;
-        }
     }
 
     private record PendingTerrainRemoval(UUID terrainId, long expiresAt) {}
