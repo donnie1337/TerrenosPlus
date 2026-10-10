@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -34,6 +36,7 @@ public final class TerrenoCommand implements CommandExecutor, TabCompleter {
     private final TerrenoManager manager;
     private final TrackingStickListener trackingStickListener;
     private final MarcoManager marcoManager;
+    private final Map<UUID, PendingTerrainRemoval> pendingTerrainRemovals = new HashMap<>();
 
     public TerrenoCommand(TerrenosPlus plugin, TerrenoManager manager,
                           TrackingStickListener trackingStickListener,
@@ -96,6 +99,20 @@ public final class TerrenoCommand implements CommandExecutor, TabCompleter {
             if (!t.ownerId().equals(player.getUniqueId()) && !player.hasPermission("terrenosplus.admin")) {
                 plugin.send(player, "messages.not-owner");
                 return true;
+            }
+
+            if (confirmTerrainRemoval(player)) {
+                long now = System.currentTimeMillis();
+                PendingTerrainRemoval pending = pendingTerrainRemovals.get(player.getUniqueId());
+                if (pending == null || !pending.terrainId().equals(t.id()) || pending.expiresAt() < now) {
+                    pendingTerrainRemovals.put(
+                            player.getUniqueId(),
+                            new PendingTerrainRemoval(t.id(), now + 10_000L)
+                    );
+                    player.sendMessage("§a[Terrenos] §fDigite §a/terreno remover §fnovamente em até §e10 segundos §fpara confirmar.");
+                    return true;
+                }
+                pendingTerrainRemovals.remove(player.getUniqueId());
             }
 
             manager.remove(t);
@@ -389,6 +406,21 @@ public final class TerrenoCommand implements CommandExecutor, TabCompleter {
 
         return List.of();
     }
+
+    private boolean confirmTerrainRemoval(Player player) {
+        org.bukkit.plugin.Plugin utilidades = plugin.getServer().getPluginManager().getPlugin("UtilidadesPlus");
+        if (utilidades == null || !utilidades.isEnabled()) return true;
+        try {
+            Object result = utilidades.getClass()
+                    .getMethod("confirmTerrainRemoval", Player.class)
+                    .invoke(utilidades, player);
+            return !(result instanceof Boolean value) || value;
+        } catch (ReflectiveOperationException | LinkageError ignored) {
+            return true;
+        }
+    }
+
+    private record PendingTerrainRemoval(UUID terrainId, long expiresAt) {}
 
     private List<String> expansionAmountSuggestions(Terreno terrain, TerrenoManager.Direction direction) {
         long borderLength = switch (direction) {
