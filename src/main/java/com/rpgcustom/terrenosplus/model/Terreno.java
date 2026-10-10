@@ -22,41 +22,42 @@ public final class Terreno {
     private long ownerLastSeenAt;
     private boolean explosionsEnabled;
     private boolean visitorFlyEnabled;
+    private boolean titleEnabled;
     private final Set<UUID> trustedPlayers;
 
     public Terreno(UUID id, UUID ownerId, String ownerName, String world,
                    int x1, int z1, int x2, int z2) {
-        this(id, ownerId, ownerName, world, x1, z1, x2, z2, 0L, 0L, false, true, Set.of());
+        this(id, ownerId, ownerName, world, x1, z1, x2, z2, 0L, 0L, false, true, true, Set.of());
     }
 
     public Terreno(UUID id, UUID ownerId, String ownerName, String world,
                    int x1, int z1, int x2, int z2, long createdAt) {
-        this(id, ownerId, ownerName, world, x1, z1, x2, z2, createdAt, createdAt, false, true, Set.of());
+        this(id, ownerId, ownerName, world, x1, z1, x2, z2, createdAt, createdAt, false, true, true, Set.of());
     }
 
     public Terreno(UUID id, UUID ownerId, String ownerName, String world,
                    int x1, int z1, int x2, int z2, long createdAt, long ownerLastSeenAt) {
-        this(id, ownerId, ownerName, world, x1, z1, x2, z2, createdAt, ownerLastSeenAt, false, true, Set.of());
+        this(id, ownerId, ownerName, world, x1, z1, x2, z2, createdAt, ownerLastSeenAt, false, true, true, Set.of());
     }
 
     public Terreno(UUID id, UUID ownerId, String ownerName, String world,
                    int x1, int z1, int x2, int z2, long createdAt, long ownerLastSeenAt,
                    boolean explosionsEnabled) {
         this(id, ownerId, ownerName, world, x1, z1, x2, z2, createdAt, ownerLastSeenAt,
-                explosionsEnabled, true, Set.of());
+                explosionsEnabled, true, true, Set.of());
     }
 
     public Terreno(UUID id, UUID ownerId, String ownerName, String world,
                    int x1, int z1, int x2, int z2, long createdAt, long ownerLastSeenAt,
                    boolean explosionsEnabled, boolean visitorFlyEnabled) {
         this(id, ownerId, ownerName, world, x1, z1, x2, z2, createdAt, ownerLastSeenAt,
-                explosionsEnabled, visitorFlyEnabled, Set.of());
+                explosionsEnabled, visitorFlyEnabled, true, Set.of());
     }
 
     public Terreno(UUID id, UUID ownerId, String ownerName, String world,
                    int x1, int z1, int x2, int z2, long createdAt, long ownerLastSeenAt,
                    boolean explosionsEnabled, boolean visitorFlyEnabled,
-                   Set<UUID> trustedPlayers) {
+                   boolean titleEnabled, Set<UUID> trustedPlayers) {
         this.id = id;
         this.ownerId = ownerId;
         this.ownerName = ownerName;
@@ -69,6 +70,7 @@ public final class Terreno {
         this.ownerLastSeenAt = Math.max(0L, ownerLastSeenAt);
         this.explosionsEnabled = explosionsEnabled;
         this.visitorFlyEnabled = visitorFlyEnabled;
+        this.titleEnabled = titleEnabled;
         this.trustedPlayers = new HashSet<>(trustedPlayers == null ? Set.of() : trustedPlayers);
     }
 
@@ -86,6 +88,8 @@ public final class Terreno {
     public void setExplosionsEnabled(boolean enabled) { explosionsEnabled = enabled; }
     public boolean visitorFlyEnabled() { return visitorFlyEnabled; }
     public void setVisitorFlyEnabled(boolean enabled) { visitorFlyEnabled = enabled; }
+    public boolean titleEnabled() { return titleEnabled; }
+    public void setTitleEnabled(boolean enabled) { titleEnabled = enabled; }
     public boolean isTrusted(UUID playerId) { return playerId != null && trustedPlayers.contains(playerId); }
     public boolean trust(UUID playerId) {
         return playerId != null && !ownerId.equals(playerId) && trustedPlayers.add(playerId);
@@ -114,6 +118,7 @@ public final class Terreno {
                 ownerLastSeenAt,
                 explosionsEnabled,
                 visitorFlyEnabled,
+                titleEnabled,
                 trustedPlayers
         );
     }
