@@ -59,6 +59,7 @@ public final class TerrenoManager implements TerrenosApi {
                 long ownerLastSeenAt = data.getLong(base + "last-seen-at", 0L);
                 boolean explosionsEnabled = data.getBoolean(base + "explosions-enabled", false);
                 boolean visitorFlyEnabled = data.getBoolean(base + "visitor-fly-enabled", true);
+                boolean titleEnabled = data.getBoolean(base + "title-enabled", true);
                 Set<UUID> trustedPlayers = new HashSet<>();
                 for (String trusted : data.getStringList(base + "trusted-players")) {
                     try {
@@ -79,7 +80,7 @@ public final class TerrenoManager implements TerrenosApi {
                 Terreno terreno = new Terreno(
                         id, owner, ownerName, world,
                         minX, minZ, maxX, maxZ,
-                        createdAt, ownerLastSeenAt, explosionsEnabled, visitorFlyEnabled, trustedPlayers
+                        createdAt, ownerLastSeenAt, explosionsEnabled, visitorFlyEnabled, titleEnabled, trustedPlayers
                 );
                 terrenos.put(id, terreno);
                 index(terreno);
@@ -104,6 +105,7 @@ public final class TerrenoManager implements TerrenosApi {
             data.set(base + "last-seen-at", terreno.ownerLastSeenAt());
             data.set(base + "explosions-enabled", terreno.explosionsEnabled());
             data.set(base + "visitor-fly-enabled", terreno.visitorFlyEnabled());
+            data.set(base + "title-enabled", terreno.titleEnabled());
             data.set(base + "trusted-players",
                     terreno.trustedPlayers().stream().map(UUID::toString).sorted().toList());
         }
@@ -252,6 +254,13 @@ public final class TerrenoManager implements TerrenosApi {
     public boolean setVisitorFlyEnabled(Terreno terreno, boolean enabled) {
         if (terreno == null || !terrenos.containsKey(terreno.id())) return false;
         terreno.setVisitorFlyEnabled(enabled);
+        save();
+        return true;
+    }
+
+    public boolean setTitleEnabled(Terreno terreno, boolean enabled) {
+        if (terreno == null || !terrenos.containsKey(terreno.id())) return false;
+        terreno.setTitleEnabled(enabled);
         save();
         return true;
     }
