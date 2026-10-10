@@ -39,6 +39,7 @@ public final class TerrainEnterListener implements Listener {
 
         UUID previousId = previous.map(Terreno::id).orElse(null);
         Terreno terrain = current.get();
+        if (!terrain.titleEnabled()) return;
 
         // Só mostra ao realmente entrar em outro terreno; caminhar dentro dele
         // não repete o title.
