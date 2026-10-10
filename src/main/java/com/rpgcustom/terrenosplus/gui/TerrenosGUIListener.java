@@ -113,6 +113,18 @@ public final class TerrenosGUIListener implements Listener {
                 return;
             }
 
+            if (slot == TerrenosGUI.SLOT_TITLE) {
+                boolean enabled = !terrain.titleEnabled();
+                if (!manager.setTitleEnabled(terrain, enabled)) {
+                    player.sendMessage(color("&c[Terrenos] &fNão foi possível alterar a mensagem de entrada."));
+                    return;
+                }
+                player.sendMessage(color("&a[Terrenos] &fMensagem de entrada "
+                        + (enabled ? "&aativada" : "&cdesativada") + "&f."));
+                player.openInventory(TerrenosGUI.manage(player, terrain, marcos, plugin));
+                return;
+            }
+
             if (slot == TerrenosGUI.SLOT_EXPAND) {
                 player.closeInventory();
 
